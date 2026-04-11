@@ -3,12 +3,12 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, getDocs, deleteDoc, collection, writeBatch } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDOCusASMq_ZUWwksdOGZT7WibyeMCJfKY",
-  authDomain: "koviloor-payroll.firebaseapp.com",
-  projectId: "koviloor-payroll",
-  storageBucket: "koviloor-payroll.firebasestorage.app",
-  messagingSenderId: "164444642831",
-  appId: "1:164444642831:web:26bc4c11522f8af4144d7a"
+  apiKey: "AIzaSyDf4oElr0EPBYaDKF3b-6zmng_sUQGnlq0",
+  authDomain: "koviloor-gurupooja.firebaseapp.com",
+  projectId: "koviloor-gurupooja",
+  storageBucket: "koviloor-gurupooja.firebasestorage.app",
+  messagingSenderId: "34947744125",
+  appId: "1:34947744125:web:9f49af02c63a86cb92cc14"
 };
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
