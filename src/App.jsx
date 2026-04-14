@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDocs, getDocsFromServer, deleteDoc, collection, writeBatch } from "firebase/firestore";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getFirestore, doc, setDoc, getDoc, getDocs, getDocsFromServer, deleteDoc, collection, writeBatch, onSnapshot } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDf4oElr0EPBYaDKF3b-6zmng_sUQGnlq0",
@@ -10,7 +10,7 @@ const firebaseConfig = {
   messagingSenderId: "34947744125",
   appId: "1:34947744125:web:9f49af02c63a86cb92cc14"
 };
-const fbApp = initializeApp(firebaseConfig);
+const fbApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(fbApp);
 const COL = "gurpooja_saints";
 
@@ -311,6 +311,7 @@ function Dashboard() {
   const toast$=(msg,type='ok')=>{setToast({msg,type});setTimeout(()=>setToast(null),4000);};
 
   useEffect(()=>{
+    // First check if seeding is needed
     (async()=>{
       try{
         const snap=await getDocsFromServer(collection(db,COL));
@@ -318,32 +319,54 @@ function Dashboard() {
           const batch=writeBatch(db);
           DEFAULT_SAINTS.forEach(s=>batch.set(doc(db,COL,s.id),s));
           await batch.commit();
-          setSaints(DEFAULT_SAINTS);
-          toast$('✓ 70 குருபூஜைகள் Firebase-ல் சேமிக்கப்பட்டன');
-        } else {
-          const data=[];
-          snap.forEach(d=>data.push(d.data()));
-          data.sort((a,b)=>parseInt(a.id)-parseInt(b.id));
-          setSaints(data);
+          console.log('Seeded 70 saints to Firestore');
         }
       }catch(e){
-        console.error('Load error:',e);
-        setSaints(DEFAULT_SAINTS);
-        toast$('Firebase load பிழை: '+e.message,'err');
+        console.error('Seed error:',e);
       }
-      setLoaded(true);
     })();
+
+    // Real-time listener — auto-updates whenever Firestore changes
+    const unsub = onSnapshot(collection(db,COL),
+      (snap)=>{
+        const data=[];
+        snap.forEach(d=>data.push(d.data()));
+        data.sort((a,b)=>parseInt(a.id)-parseInt(b.id));
+        setSaints(data);
+        setLoaded(true);
+        console.log('Firestore sync: '+data.length+' saints loaded');
+      },
+      (e)=>{
+        console.error('Firestore listen error:',e);
+        toast$('Firebase பிழை: '+e.message,'err');
+        setSaints(DEFAULT_SAINTS);
+        setLoaded(true);
+      }
+    );
+    return ()=>unsub(); // cleanup on unmount
   },[]);
 
   const saveSaint=async(saint)=>{
     setSaving(true);
     try{
-      await setDoc(doc(db,COL,saint.id), JSON.parse(JSON.stringify(saint)));
-      console.log('Saved to Firestore:', saint.id, 'contacts:', saint.contacts?.length || 0);
+      // Build clean object — strip undefined values
+      const clean = {};
+      Object.keys(saint).forEach(k=>{ if(saint[k]!==undefined) clean[k]=saint[k]; });
+      // Save to Firestore
+      await setDoc(doc(db,COL,String(saint.id)), clean);
+      // Verify by reading back
+      const verify = await getDoc(doc(db,COL,String(saint.id)));
+      if(verify.exists()){
+        const saved = verify.data();
+        console.log('✓ Verified in Firestore:', saint.id, '| contacts:', saved.contacts?.length||0, '| name:', saved.name);
+      } else {
+        console.error('✗ Document not found after save!');
+        toast$('சேமிப்பு சரிபார்ப்பு தோல்வி','err');
+      }
     }
     catch(e){
-      console.error('Save error:', e);
-      toast$('சேமிப்பு பிழை: '+e.message,'err');
+      console.error('Firestore Save Error:', e.code, e.message);
+      toast$('🔴 சேமிப்பு பிழை: '+(e.code||e.message),'err');
     }
     setSaving(false);
   };
