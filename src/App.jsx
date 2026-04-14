@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDocs, deleteDoc, collection, writeBatch } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDocs, getDocsFromServer, deleteDoc, collection, writeBatch } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDf4oElr0EPBYaDKF3b-6zmng_sUQGnlq0",
@@ -169,10 +169,15 @@ function LoginScreen({onLogin}) {
 function SaintModal({saint,onSave,onClose}){
   const blank={name:'',tamilMonth:'சித்திரை',star:'மகம்',isPublic:false,pax:100,notes:'',date:'',contacts:[]};
   const [f,setF]=useState(saint?{...blank,...saint}:blank);
-  const [nc,setNc]=useState({name:'',email:'',phone:'',address:''});
+  const [nc,setNc]=useState({name:'',email:'',phone:'',phone2:'',phone3:'',whatsapp:'',address:'',address2:''});
   const [showCF,setShowCF]=useState(false);
   const upd=(k,v)=>setF(p=>({...p,[k]:v}));
-  const addC=()=>{if(nc.name){setF(p=>({...p,contacts:[...p.contacts,{...nc}]}));setNc({name:'',email:'',phone:'',address:''});setShowCF(false);}};
+  const addC=()=>{
+    if(!nc.name){alert('பெயர் கட்டாயம் தேவை');return;}
+    setF(p=>({...p,contacts:[...p.contacts,{...nc}]}));
+    setNc({name:'',email:'',phone:'',phone2:'',phone3:'',whatsapp:'',address:'',address2:''});
+    setShowCF(false);
+  };
   const updC=(i,k,v)=>setF(p=>({...p,contacts:p.contacts.map((c,ci)=>ci===i?{...c,[k]:v}:c)}));
   return(
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',zIndex:100,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}>
@@ -209,9 +214,16 @@ function SaintModal({saint,onSave,onClose}){
             </div>
             {showCF&&<div style={{background:'#fff7ed',borderRadius:'.5rem',padding:'.75rem',marginBottom:'.5rem',display:'flex',flexDirection:'column',gap:'.4rem'}}>
               <div style={{fontWeight:600,fontSize:'.8rem',color:'#c05621'}}>புதிய தொடர்பு</div>
-              {[['name','பெயர் *'],['email','மின்னஞ்சல்'],['phone','தொலைபேசி'],['address','முகவரி']].map(([k,p])=>(
-                <input key={k} placeholder={p} value={nc[k]} onChange={e=>setNc(c=>({...c,[k]:e.target.value}))} style={{...inp,fontSize:'.8rem',padding:'.35rem .6rem'}}/>
-              ))}
+              <input placeholder="பெயர் *" value={nc.name} onChange={e=>setNc(c=>({...c,name:e.target.value}))} style={{...inp,fontSize:'.8rem',padding:'.35rem .6rem'}}/>
+              <input placeholder="மின்னஞ்சல்" value={nc.email} onChange={e=>setNc(c=>({...c,email:e.target.value}))} style={{...inp,fontSize:'.8rem',padding:'.35rem .6rem'}}/>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.35rem'}}>
+                <input placeholder="தொலைபேசி 1" value={nc.phone} onChange={e=>setNc(c=>({...c,phone:e.target.value}))} style={{...inp,fontSize:'.8rem',padding:'.35rem .6rem'}}/>
+                <input placeholder="தொலைபேசி 2" value={nc.phone2||''} onChange={e=>setNc(c=>({...c,phone2:e.target.value}))} style={{...inp,fontSize:'.8rem',padding:'.35rem .6rem'}}/>
+                <input placeholder="தொலைபேசி 3" value={nc.phone3||''} onChange={e=>setNc(c=>({...c,phone3:e.target.value}))} style={{...inp,fontSize:'.8rem',padding:'.35rem .6rem'}}/>
+                <input placeholder="WhatsApp" value={nc.whatsapp||''} onChange={e=>setNc(c=>({...c,whatsapp:e.target.value}))} style={{...inp,fontSize:'.8rem',padding:'.35rem .6rem'}}/>
+              </div>
+              <textarea placeholder="முகவரி 1" value={nc.address} onChange={e=>setNc(c=>({...c,address:e.target.value}))} rows={2} style={{...inp,fontSize:'.8rem',padding:'.35rem .6rem',resize:'vertical'}}/>
+              <textarea placeholder="முகவரி 2 (தேவைப்பட்டால்)" value={nc.address2||''} onChange={e=>setNc(c=>({...c,address2:e.target.value}))} rows={2} style={{...inp,fontSize:'.8rem',padding:'.35rem .6rem',resize:'vertical'}}/>
               <div style={{display:'flex',gap:'.5rem'}}>
                 <button onClick={addC} style={{flex:1,...smBtn,background:'#c05621',color:'#fff',padding:'.45rem'}}>சேர்</button>
                 <button onClick={()=>setShowCF(false)} style={{flex:1,...smBtn,background:'#e5e7eb',color:'#374151',padding:'.45rem'}}>ரத்து</button>
@@ -223,18 +235,37 @@ function SaintModal({saint,onSave,onClose}){
                   <span style={{fontWeight:600,fontSize:'.8rem',color:'#374151'}}>தொடர்பு {i+1}</span>
                   <button onClick={()=>setF(p=>({...p,contacts:p.contacts.filter((_,ci)=>ci!==i)}))} style={{...smBtn,background:'#fee2e2',color:'#ef4444',padding:'.15rem .45rem',fontSize:'.75rem'}}>✕ நீக்கு</button>
                 </div>
-                {[['name','பெயர்'],['email','மின்னஞ்சல்'],['phone','தொலைபேசி'],['address','முகவரி']].map(([k,label])=>(
+                {[['name','பெயர்'],['email','மின்னஞ்சல்']].map(([k,label])=>(
                   <div key={k} style={{display:'flex',alignItems:'center',gap:'.4rem',marginBottom:'.25rem'}}>
                     <span style={{width:75,color:'#9ca3af',fontSize:'.75rem',flexShrink:0}}>{label}</span>
                     <input value={c[k]||''} onChange={e=>updC(i,k,e.target.value)}
                       style={{flex:1,border:'1px solid #d1d5db',borderRadius:'.3rem',padding:'.25rem .45rem',fontSize:'.78rem',fontFamily:'inherit',outline:'none'}}/>
                   </div>
                 ))}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.3rem',marginBottom:'.25rem'}}>
+                  {[['phone','தொலை 1'],['phone2','தொலை 2'],['phone3','தொலை 3'],['whatsapp','WhatsApp']].map(([k,label])=>(
+                    <div key={k} style={{display:'flex',flexDirection:'column',gap:'.15rem'}}>
+                      <span style={{color:'#9ca3af',fontSize:'.7rem'}}>{label}</span>
+                      <input value={c[k]||''} onChange={e=>updC(i,k,e.target.value)}
+                        style={{border:'1px solid #d1d5db',borderRadius:'.3rem',padding:'.25rem .4rem',fontSize:'.78rem',fontFamily:'inherit',outline:'none',width:'100%'}}/>
+                    </div>
+                  ))}
+                </div>
+                {[['address','முகவரி 1'],['address2','முகவரி 2']].map(([k,label])=>(
+                  <div key={k} style={{display:'flex',alignItems:'flex-start',gap:'.4rem',marginBottom:'.25rem'}}>
+                    <span style={{width:75,color:'#9ca3af',fontSize:'.75rem',flexShrink:0,paddingTop:'.2rem'}}>{label}</span>
+                    <textarea value={c[k]||''} onChange={e=>updC(i,k,e.target.value)} rows={2}
+                      style={{flex:1,border:'1px solid #d1d5db',borderRadius:'.3rem',padding:'.25rem .45rem',fontSize:'.78rem',fontFamily:'inherit',outline:'none',resize:'vertical'}}/>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
+          <div style={{background:'#fef3c7',border:'1px solid #fcd34d',borderRadius:'.5rem',padding:'.5rem .75rem',fontSize:'.78rem',color:'#92400e',marginTop:'-.4rem'}}>
+            ⚠️ கீழே உள்ள <b>💾 சேமி</b> பொத்தானை அழுத்தினால் மட்டுமே Firebase-ல் சேமிக்கப்படும்
+          </div>
           <div style={{display:'flex',gap:'.75rem'}}>
-            <button onClick={()=>onSave(f)} style={{flex:1,background:'#c05621',color:'#fff',border:'none',borderRadius:'.6rem',padding:'.7rem',fontWeight:700,cursor:'pointer',fontSize:'1rem'}}>💾 சேமி</button>
+            <button onClick={()=>onSave(f)} style={{flex:1,background:'#c05621',color:'#fff',border:'none',borderRadius:'.6rem',padding:'.8rem',fontWeight:800,cursor:'pointer',fontSize:'1.1rem',boxShadow:'0 4px 12px rgba(192,86,33,.4)'}}>💾 Firebase-ல் சேமி</button>
             <button onClick={onClose} style={{flex:1,background:'#f3f4f6',color:'#374151',border:'none',borderRadius:'.6rem',padding:'.7rem',cursor:'pointer'}}>ரத்து</button>
           </div>
         </div>
@@ -282,7 +313,7 @@ function Dashboard() {
   useEffect(()=>{
     (async()=>{
       try{
-        const snap=await getDocs(collection(db,COL));
+        const snap=await getDocsFromServer(collection(db,COL));
         if(snap.empty){
           const batch=writeBatch(db);
           DEFAULT_SAINTS.forEach(s=>batch.set(doc(db,COL,s.id),s));
@@ -306,8 +337,14 @@ function Dashboard() {
 
   const saveSaint=async(saint)=>{
     setSaving(true);
-    try{await setDoc(doc(db,COL,saint.id),saint);}
-    catch(e){toast$('சேமிப்பு பிழை: '+e.message,'err');}
+    try{
+      await setDoc(doc(db,COL,saint.id), JSON.parse(JSON.stringify(saint)));
+      console.log('Saved to Firestore:', saint.id, 'contacts:', saint.contacts?.length || 0);
+    }
+    catch(e){
+      console.error('Save error:', e);
+      toast$('சேமிப்பு பிழை: '+e.message,'err');
+    }
     setSaving(false);
   };
 
@@ -497,7 +534,11 @@ function Dashboard() {
                     {s.contacts?.length>0&&<div style={{marginTop:'.4rem'}}>
                       {s.contacts.map((c,i)=>(
                         <div key={i} style={{fontSize:'.78rem',color:'#4b5563',marginBottom:'.15rem'}}>
-                          👤 <b>{c.name}</b>{c.email&&<> · <a href={`mailto:${c.email}`} style={{color:'#c05621'}}>{c.email}</a></>}{c.phone&&` · 📞 ${c.phone}`}
+                          👤 <b>{c.name}</b>
+                          {c.email&&<div style={{fontSize:'.72rem'}}>✉ <a href={`mailto:${c.email}`} style={{color:'#c05621'}}>{c.email}</a></div>}
+                          {(c.phone||c.phone2||c.phone3)&&<div style={{fontSize:'.72rem'}}>📞 {[c.phone,c.phone2,c.phone3].filter(Boolean).join(' / ')}{c.whatsapp&&` · WA: ${c.whatsapp}`}</div>}
+                          {c.address&&<div style={{fontSize:'.72rem',color:'#6b7280'}}>🏠 {c.address}</div>}
+                          {c.address2&&<div style={{fontSize:'.72rem',color:'#6b7280'}}>🏠 {c.address2}</div>}
                         </div>
                       ))}
                     </div>}
@@ -566,8 +607,10 @@ function Dashboard() {
         onSave={async data=>{
           if(editSaint) await upd(editSaint.id,data);
           else await addS(data);
-          setShowModal(false);setEditSaint(null);
-          toast$('✓ Firebase-ல் சேமிக்கப்பட்டது');
+          setShowModal(false); setEditSaint(null);
+          const cCount = data.contacts?.length || 0;
+          toast$('✓ சேமிக்கப்பட்டது' + (cCount > 0 ? ` · ${cCount} தொடர்பு` : ''));
+          toast$('✓ Firebase-ல் சேமிக்கப்பட்டது' + (cCount > 0 ? ` (${cCount} தொடர்பு)` : ''));
         }}/>}
       {letterSaint&&<LetterModal saint={letterSaint} onClose={()=>setLetterSaint(null)}/>}
     </div>
