@@ -52,12 +52,13 @@ const getTamilDate = (dateStr, month) => {
   const s = MONTH_STARTS[month];
   return s ? (Math.round((d-s)/86400000)+1).toString() : '____';
 };
+const ENGLISH_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const generateLetter = (s) => {
   const dt = s.date ? new Date(s.date+'T00:00:00') : null;
   const weekday = dt ? WEEKDAYS_TM[dt.getDay()] : '______';
   const tamilDate = (s.date && s.tamilMonth) ? getTamilDate(s.date, s.tamilMonth) : '____';
-  const yr2 = dt ? dt.getFullYear().toString().slice(-2) : '__';
-  return `உ.\nசிவமயம்\n\nகோவிலூர் மடத்திலிருந்து எழுதிய திருமுகம்\n\nநிகழும் பராபவ ஆண்டு ${s.tamilMonth} மாதம் ${tamilDate} நாள் ( 20${yr2} )\n${weekday} வாரத்தில் ${s.star} நட்சத்திரத்தில்\nஸ்ரீல ஸ்ரீ ${s.name} அவர்களுக்கு\nகுருபூஜை நடைபெற இருப்பதால் தாங்கள் குடும்பத்துடன் வந்து தரிசித்துப்\nபேரானந்த பெருவாழ்வைப் பெற வேண்டியது.\n\nஸ்ரீ சற்குருநாதன் துணை`;
+  const engDate = dt ? `${dt.getDate()} ${ENGLISH_MONTHS[dt.getMonth()]} ${dt.getFullYear()}` : '';
+  return `உ.\nசிவமயம்\nகோவிலூர் மடத்திலிருந்து எழுதிய திருமுகம்\nநிகழும் பராபவ ஆண்டு ${s.tamilMonth} மாதம் ${tamilDate}ம் நாள்\n( ${engDate} — ${weekday} )\n${s.star} நட்சத்திரத்தில்\nஸ்ரீல ஸ்ரீ ${s.name} அவர்களுக்கு\nகுருபூஜை நடைபெற இருப்பதால் தாங்கள் குடும்பத்துடன் வந்து தரிசித்துப்\nபேரானந்த பெருவாழ்வைப் பெற வேண்டியது.\n\nஸ்ரீ சற்குருநாதன் துணை`;
 };
 
 const DEFAULT_SAINTS = [
@@ -286,7 +287,24 @@ function LetterModal({saint,onClose}){
         <div style={{padding:'1.25rem'}}>
           <pre style={{whiteSpace:'pre-wrap',fontSize:'.9rem',color:'#1a1a2e',background:'#fffff8',borderRadius:'.5rem',padding:'1.25rem',lineHeight:2,border:'1px solid #e5e7eb',fontFamily:'inherit'}}>{txt}</pre>
           <div style={{display:'flex',gap:'.75rem',marginTop:'1rem'}}>
-            <button onClick={()=>navigator.clipboard?.writeText(txt)} style={{flex:1,...smBtn,background:'#c05621',color:'#fff',padding:'.65rem',fontWeight:600}}>📋 நகல் எடு</button>
+            <button onClick={()=>{
+            if(navigator.clipboard){
+              navigator.clipboard.writeText(txt).then(()=>alert('✓ கடிதம் நகல் எடுக்கப்பட்டது! WhatsApp / Gmail-ல் ஒட்டவும்.')).catch(()=>{
+                // fallback
+                const ta=document.createElement('textarea');
+                ta.value=txt; document.body.appendChild(ta);
+                ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta);
+                alert('✓ நகல் எடுக்கப்பட்டது!');
+              });
+            } else {
+              const ta=document.createElement('textarea');
+              ta.value=txt; document.body.appendChild(ta);
+              ta.select(); document.execCommand('copy');
+              document.body.removeChild(ta);
+              alert('✓ நகல் எடுக்கப்பட்டது!');
+            }
+          }} style={{flex:1,...smBtn,background:'#c05621',color:'#fff',padding:'.65rem',fontWeight:600}}>📋 நகல் எடு</button>
             <button onClick={onClose} style={{flex:1,...smBtn,background:'#f3f4f6',color:'#374151',padding:'.65rem'}}>மூடு</button>
           </div>
         </div>
