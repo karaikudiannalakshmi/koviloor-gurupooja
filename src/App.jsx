@@ -411,7 +411,8 @@ function Dashboard() {
 
   const today=new Date().toISOString().split('T')[0];
   const upcoming=saints.filter(s=>s.date).map(s=>({...s,dl:daysUntil(s.date)})).filter(s=>s.dl!==null&&s.dl>=0&&s.dl<=60).sort((a,b)=>a.dl-b.dl);
-  const alertsDue=saints.filter(s=>s.date&&!s.alertSent&&alertDue(s.date)<=today);
+  const past=saints.filter(s=>s.date).map(s=>({...s,dl:daysUntil(s.date)})).filter(s=>s.dl!==null&&s.dl<0).sort((a,b)=>b.dl-a.dl).slice(0,5);
+  const alertsDue=saints.filter(s=>s.date&&!s.alertSent&&alertDue(s.date)<=today&&daysUntil(s.date)>=0);
   const filtered=saints
     .filter(s=>(!filterMonth||s.tamilMonth===filterMonth)&&(!search||s.name.includes(search)||s.star.includes(search)))
     .sort((a,b)=>{
@@ -505,6 +506,21 @@ function Dashboard() {
               </div>
             }
           </div>
+          {/* Recently completed */}
+          {past.length>0&&<div>
+            <div style={{fontWeight:700,color:'#9ca3af',marginBottom:'.6rem',fontSize:'.9rem'}}>✅ கடந்த குருபூஜைகள் (சமீபத்திய {past.length})</div>
+            <div style={{display:'flex',flexDirection:'column',gap:'.4rem'}}>
+              {past.map(s=>(
+                <div key={s.id} style={{background:'#f9fafb',borderRadius:'.65rem',padding:'.65rem 1rem',display:'flex',alignItems:'center',gap:'.75rem',border:'1px solid #e5e7eb',opacity:.7}}>
+                  <div style={{minWidth:42,height:42,borderRadius:'50%',background:'#9ca3af',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.75rem',fontWeight:700}}>{Math.abs(s.dl)}d</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:600,fontSize:'.875rem',color:'#6b7280'}}>{s.name}</div>
+                    <div style={{fontSize:'.75rem',color:'#9ca3af'}}>{fmtDate(s.date)} · {s.tamilMonth} {s.star}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>}
         </div>}
 
         {tab==='schedule'&&<div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
