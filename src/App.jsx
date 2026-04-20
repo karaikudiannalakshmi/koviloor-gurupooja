@@ -412,7 +412,14 @@ function Dashboard() {
   const today=new Date().toISOString().split('T')[0];
   const upcoming=saints.filter(s=>s.date).map(s=>({...s,dl:daysUntil(s.date)})).filter(s=>s.dl!==null&&s.dl>=0&&s.dl<=60).sort((a,b)=>a.dl-b.dl);
   const alertsDue=saints.filter(s=>s.date&&!s.alertSent&&alertDue(s.date)<=today);
-  const filtered=saints.filter(s=>(!filterMonth||s.tamilMonth===filterMonth)&&(!search||s.name.includes(search)||s.star.includes(search)));
+  const filtered=saints
+    .filter(s=>(!filterMonth||s.tamilMonth===filterMonth)&&(!search||s.name.includes(search)||s.star.includes(search)))
+    .sort((a,b)=>{
+      if(!a.date && !b.date) return parseInt(a.id)-parseInt(b.id);
+      if(!a.date) return 1;
+      if(!b.date) return -1;
+      return a.date.localeCompare(b.date);
+    });
   const totalDated=saints.filter(s=>s.date).length;
   const TABS=[['dashboard','🏠 முகப்பு'],['schedule','📅 அட்டவணை'],['saints','👤 குரு பட்டியல்'],['kitchen','🍱 சமையலறை']];
 
