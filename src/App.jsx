@@ -102,13 +102,11 @@ const downloadICS = (saints) => {
   const a = document.createElement('a');
   a.href = url;
   a.download = 'koviloor-gurpooja-2026-27.ics';
-  document.body.appendChild(a); a.click();
+  document.body.appendChild(a);
+  a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  alert(nonPublic.length + ' குருபூஜைகள் calendar கோப்பில் சேர்க்கப்பட்டன.
-
-Google Calendar-ல் import செய்ய:
-Settings → Import & Export → Import');
+  alert(nonPublic.length + ' events downloaded. Import in Google Calendar: Settings > Import & Export > Import');
 };
 
 const DEFAULT_SAINTS = [
