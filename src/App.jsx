@@ -91,8 +91,7 @@ const generateICS = (saints) => {
     );
   });
   lines.push('END:VCALENDAR');
-  return lines.join('
-');
+  return lines.join('\r\n');
 };
 
 const downloadICS = (saints) => {
