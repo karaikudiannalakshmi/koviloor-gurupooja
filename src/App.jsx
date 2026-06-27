@@ -61,6 +61,57 @@ const generateLetter = (s) => {
   return `உ.\nசிவமயம்\nகோவிலூர் மடத்திலிருந்து எழுதிய திருமுகம்\nநிகழும் பராபவ ஆண்டு ${s.tamilMonth} மாதம் ${tamilDate}ம் நாள்\n( ${engDate} — ${weekday} )\n${s.star} நட்சத்திரத்தில்\nஸ்ரீல ஸ்ரீ ${s.name} அவர்களுக்கு\nகுருபூஜை நடைபெற இருப்பதால் தாங்கள் குடும்பத்துடன் வந்து தரிசித்துப்\nபேரானந்த பெருவாழ்வைப் பெற வேண்டியது.\n\nஸ்ரீ சற்குருநாதன் துணை`;
 };
 
+const ENGLISH_MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const generateICS = (saints) => {
+  const events = saints.filter(s => s.date && !s.isPublic);
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Koviloor Madalayam//Guru Pooja 2026-27//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'X-WR-CALNAME:கோவிலூர் குருபூஜை பராபவ 2026-27',
+    'X-WR-TIMEZONE:Asia/Kolkata',
+  ];
+  events.forEach(s => {
+    const dt = new Date(s.date + 'T00:00:00');
+    const next = new Date(dt); next.setDate(dt.getDate() + 1);
+    const fmt = d => d.toISOString().replace(/-/g,'').split('T')[0];
+    lines.push(
+      'BEGIN:VEVENT',
+      'DTSTART;VALUE=DATE:' + fmt(dt),
+      'DTEND;VALUE=DATE:' + fmt(next),
+      'SUMMARY:' + s.name + ' குருபூஜை',
+      'DESCRIPTION:' + s.tamilMonth + ' மாதம் ' + s.star + ' நட்சத்திரம் | ' + s.pax + ' பேர் | பராபவ வருஷம்',
+      'LOCATION:Koviloor Madalayam\, Sivaganga - 630108',
+      'UID:gurpooja-' + s.id + '-parabava@koviloor',
+      'STATUS:CONFIRMED',
+      'END:VEVENT'
+    );
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('
+');
+};
+
+const downloadICS = (saints) => {
+  const nonPublic = saints.filter(s => s.date && !s.isPublic);
+  const ics = generateICS(saints);
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'koviloor-gurpooja-2026-27.ics';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  alert(nonPublic.length + ' குருபூஜைகள் calendar கோப்பில் சேர்க்கப்பட்டன.
+
+Google Calendar-ல் import செய்ய:
+Settings → Import & Export → Import');
+};
+
 const DEFAULT_SAINTS = [
   {id:'1',name:'திருநாவுக்கரசர்',tamilMonth:'சித்திரை',star:'சதயம்',isPublic:false,pax:100,contacts:[],notes:'',date:'2026-04-14',alertSent:false,calAdded:false},
   {id:'2',name:'கோபாலப்ப ஐயா',tamilMonth:'சித்திரை',star:'உத்திரட்டாதி',isPublic:false,pax:75,contacts:[],notes:'',date:'2026-04-16',alertSent:false,calAdded:false},
@@ -474,6 +525,15 @@ function Dashboard() {
                 <div style={{fontSize:'.75rem',color:'#6b7280',marginTop:'.2rem'}}>{l}</div>
               </div>
             ))}
+          </div>
+          <div style={{background:'#fff',border:'1px solid #bfdbfe',borderRadius:'.75rem',padding:'1rem',display:'flex',justifyContent:'space-between',alignItems:'center',gap:'1rem'}}>
+            <div>
+              <div style={{fontWeight:700,color:'#1d4ed8',fontSize:'.9rem'}}>📅 Google Calendar இறக்குமதி</div>
+              <div style={{fontSize:'.75rem',color:'#6b7280',marginTop:'.15rem'}}>{saints.filter(s=>s.date&&!s.isPublic).length} தனிப்பட்ட குருபூஜைகள் — ICS கோப்பு பதிவிறக்கு</div>
+            </div>
+            <button onClick={()=>downloadICS(saints)} style={{...smBtn,background:'#1a73e8',color:'#fff',padding:'.55rem 1.1rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.85rem',whiteSpace:'nowrap'}}>
+              ⬇️ .ics பதிவிறக்கு
+            </button>
           </div>
           {alertsDue.length>0&&<div style={{background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:'.75rem',padding:'1rem'}}>
             <div style={{fontWeight:700,color:'#b91c1c',marginBottom:'.6rem'}}>⚠️ இப்போது அறிவிப்பு அனுப்ப வேண்டியவை</div>
