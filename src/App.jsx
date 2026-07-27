@@ -189,16 +189,23 @@ const exportToExcel = (saints) => {
     };
   });
 
-  // Sheet 2: Kitchen Planning (for Koviloor Kitchen app upload)
-  const kitchenData = sorted.map((s, i) => {
+  // Sheet 2: Kitchen Planning — only events where invites are being sent (contacts > 0)
+  const withInvites = sorted.filter(s => s.contacts && s.contacts.length > 0);
+  const kitchenData = withInvites.map((s, i) => {
     const dt = new Date(s.date + 'T00:00:00');
+    const contactNames = s.contacts.map(c => c.name).join(', ');
     return {
       'Date': s.date,
+      'English Date': dt.getDate() + ' ' + EM[dt.getMonth()] + ' ' + dt.getFullYear(),
+      'Day': WD[dt.getDay()],
       'Event Name': s.name + ' குருபூஜை',
+      'Tamil Month': s.tamilMonth,
+      'Nakshatra': s.star,
       'Pax': s.pax,
       'Meal Type': 'Lunch',
-      'Month': s.tamilMonth,
-      'Notes': s.star + ' நட்சத்திரம்' + (s.isPublic ? ' | Public' : '')
+      'Invited Families': s.contacts.length,
+      'Contact Names': contactNames,
+      'Notes': s.notes || ''
     };
   });
 
@@ -224,8 +231,8 @@ const exportToExcel = (saints) => {
   XLSX.utils.book_append_sheet(wb, ws1, 'குருபூஜை அட்டவணை');
 
   const ws2 = XLSX.utils.json_to_sheet(kitchenData);
-  ws2['!cols'] = [{wch:12},{wch:35},{wch:8},{wch:10},{wch:14},{wch:30}];
-  XLSX.utils.book_append_sheet(wb, ws2, 'Kitchen Upload');
+  ws2['!cols'] = [{wch:12},{wch:20},{wch:12},{wch:38},{wch:14},{wch:16},{wch:8},{wch:10},{wch:14},{wch:35},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Kitchen - With Invites (' + withInvites.length + ')');
 
   const ws3 = XLSX.utils.json_to_sheet(monthSummary);
   ws3['!cols'] = [{wch:14},{wch:8},{wch:12},{wch:14},{wch:14}];
