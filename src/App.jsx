@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { initializeApp, getApps, getApp } from "firebase/app";
+import * as XLSX from "xlsx";
 import { getFirestore, doc, setDoc, getDoc, getDocs, getDocsFromServer, deleteDoc, collection, writeBatch, onSnapshot } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -163,6 +164,74 @@ const printSchedule = (saints) => {
   w.document.write(html);
   w.document.close();
   setTimeout(function() { w.print(); }, 600);
+};
+
+const exportToExcel = (saints) => {
+  const sorted = [...saints].filter(s => s.date).sort((a, b) => a.date.localeCompare(b.date));
+  const EM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const WD = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  // Sheet 1: Full Schedule
+  const scheduleData = sorted.map((s, i) => {
+    const dt = new Date(s.date + 'T00:00:00');
+    return {
+      'வ.எண்': i + 1,
+      'தேதி (Date)': s.date,
+      'Day': WD[dt.getDay()],
+      'English Date': dt.getDate() + ' ' + EM[dt.getMonth()] + ' ' + dt.getFullYear(),
+      'Tamil Month': s.tamilMonth,
+      'Nakshatra': s.star,
+      'Guru / Event': s.name,
+      'Expected Pax': s.pax,
+      'Public': s.isPublic ? 'Yes' : 'No',
+      'Contacts': s.contacts ? s.contacts.length : 0,
+      'Notes': s.notes || ''
+    };
+  });
+
+  // Sheet 2: Kitchen Planning (for Koviloor Kitchen app upload)
+  const kitchenData = sorted.map((s, i) => {
+    const dt = new Date(s.date + 'T00:00:00');
+    return {
+      'Date': s.date,
+      'Event Name': s.name + ' குருபூஜை',
+      'Pax': s.pax,
+      'Meal Type': 'Lunch',
+      'Month': s.tamilMonth,
+      'Notes': s.star + ' நட்சத்திரம்' + (s.isPublic ? ' | Public' : '')
+    };
+  });
+
+  // Sheet 3: Month-wise summary
+  const monthSummary = ['சித்திரை','வைகாசி','ஆனி','ஆடி','ஆவணி','புரட்டாசி',
+    'ஐப்பசி','கார்த்திகை','மார்கழி','தை','மாசி','பங்குனி'].map(m => {
+    const ms = sorted.filter(s => s.tamilMonth === m);
+    return {
+      'Tamil Month': m,
+      'Events': ms.length,
+      'Total Pax': ms.reduce((sum, s) => sum + (parseInt(s.pax) || 0), 0),
+      'Public Events': ms.filter(s => s.isPublic).length,
+      'Private Events': ms.filter(s => !s.isPublic).length
+    };
+  }).filter(r => r.Events > 0);
+
+  const wb = XLSX.utils.book_new();
+
+  const ws1 = XLSX.utils.json_to_sheet(scheduleData);
+  ws1['!cols'] = [
+    {wch:6},{wch:12},{wch:12},{wch:20},{wch:14},{wch:16},{wch:40},{wch:10},{wch:8},{wch:10},{wch:30}
+  ];
+  XLSX.utils.book_append_sheet(wb, ws1, 'குருபூஜை அட்டவணை');
+
+  const ws2 = XLSX.utils.json_to_sheet(kitchenData);
+  ws2['!cols'] = [{wch:12},{wch:35},{wch:8},{wch:10},{wch:14},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Kitchen Upload');
+
+  const ws3 = XLSX.utils.json_to_sheet(monthSummary);
+  ws3['!cols'] = [{wch:14},{wch:8},{wch:12},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws3, 'Month Summary');
+
+  XLSX.writeFile(wb, 'Koviloor-GuruPooja-2026-27.xlsx');
 };
 
 const DEFAULT_SAINTS = [
@@ -584,9 +653,10 @@ function Dashboard() {
               <div style={{fontWeight:700,color:'#1d4ed8',fontSize:'.9rem'}}>📅 Google Calendar இறக்குமதி</div>
               <div style={{fontSize:'.75rem',color:'#6b7280',marginTop:'.15rem'}}>{saints.filter(s=>s.date&&!s.isPublic).length} தனிப்பட்ட குருபூஜைகள் — ICS கோப்பு பதிவிறக்கு</div>
             </div>
-            <button onClick={()=>downloadICS(saints)} style={{...smBtn,background:'#1a73e8',color:'#fff',padding:'.55rem 1.1rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.85rem',whiteSpace:'nowrap'}}>
-              ⬇️ .ics பதிவிறக்கு
-            </button>
+            <div style={{display:'flex',gap:'.5rem'}}>
+              <button onClick={()=>downloadICS(saints)} style={{...smBtn,background:'#1a73e8',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>⬇️ .ics Calendar</button>
+              <button onClick={()=>exportToExcel(saints)} style={{...smBtn,background:'#16a34a',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>📊 Excel</button>
+            </div>
           </div>
           {alertsDue.length>0&&<div style={{background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:'.75rem',padding:'1rem'}}>
             <div style={{fontWeight:700,color:'#b91c1c',marginBottom:'.6rem'}}>⚠️ இப்போது அறிவிப்பு அனுப்ப வேண்டியவை</div>
@@ -643,6 +713,7 @@ function Dashboard() {
               <span style={{fontSize:'.8rem',color:'#6b7280'}}>{totalDated}/{saints.length}</span>
               <button onClick={()=>downloadICS(saints)} style={{...smBtn,background:'#1a73e8',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>⬇️ Calendar</button>
               <button onClick={()=>printSchedule(saints)} style={{...smBtn,background:'#c05621',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>🖨️ அட்டவணை அச்சு</button>
+              <button onClick={()=>exportToExcel(saints)} style={{...smBtn,background:'#16a34a',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>📊 Excel Export</button>
             </div>
           </div>
           <div style={{background:'#fef3c7',border:'1px solid #fcd34d',borderRadius:'.5rem',padding:'.65rem .9rem',fontSize:'.8rem',color:'#92400e'}}>
