@@ -110,50 +110,59 @@ const downloadICS = (saints) => {
 };
 
 const printSchedule = (saints) => {
-  const sorted = [...saints].filter(s=>s.date).sort((a,b)=>a.date.localeCompare(b.date));
-  const EMONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const sorted = [...saints].filter(s => s.date).sort((a, b) => a.date.localeCompare(b.date));
+  const EM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const fmtD = (ds) => {
-    const d = new Date(ds+'T00:00:00');
-    return d.getDate()+' '+EMONTHS[d.getMonth()]+' '+d.getFullYear()+' ('+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]+')';
+    const d = new Date(ds + 'T00:00:00');
+    return d.getDate() + ' ' + EM[d.getMonth()] + ' ' + d.getFullYear() + ' (' + WD[d.getDay()] + ')';
   };
-  const rows = sorted.map((s,i) => {
-    const contacts = s.contacts?.length || 0;
-    const pub = s.isPublic ? 'பொது' : '';
-    return '<tr style="border-bottom:1px solid #ddd;">'
-      +'<td style="padding:6px 10px;text-align:center;color:#666;">'+(i+1)+'</td>'
-      +'<td style="padding:6px 10px;white-space:nowrap;">'+fmtD(s.date)+'</td>'
-      +'<td style="padding:6px 10px;">'+s.tamilMonth+' — '+s.star+'</td>'
-      +'<td style="padding:6px 10px;font-weight:600;">'+s.name+(pub?' <span style=\"background:#ede9fe;color:#7c3aed;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:400;\">'+pub+'</span>':'')+'</td>'
-      +'<td style="padding:6px 10px;text-align:center;">'+s.pax+'</td>'
-      +'<td style="padding:6px 10px;text-align:center;color:'+(contacts>0?'#16a34a':'#dc2626')+';">'+(contacts>0?contacts+' குடும்பம்':'—')+'</td>'
-      +'</tr>';
+  const rows = sorted.map((s, i) => {
+    const contacts = s.contacts ? s.contacts.length : 0;
+    const pubBadge = s.isPublic ? ' [பொது]' : '';
+    return [
+      '<tr style="border-bottom:1px solid #e5e7eb;">',
+      '<td style="padding:6px 8px;text-align:center;color:#9ca3af;font-size:12px;">' + (i + 1) + '</td>',
+      '<td style="padding:6px 8px;white-space:nowrap;font-size:13px;">' + fmtD(s.date) + '</td>',
+      '<td style="padding:6px 8px;font-size:12px;color:#6b7280;">' + s.tamilMonth + ' | ' + s.star + '</td>',
+      '<td style="padding:6px 8px;font-weight:600;">' + s.name + pubBadge + '</td>',
+      '<td style="padding:6px 8px;text-align:center;">' + s.pax + '</td>',
+      '<td style="padding:6px 8px;text-align:center;color:' + (contacts > 0 ? '#16a34a' : '#dc2626') + ';">' + (contacts > 0 ? contacts + ' குடும்பம்' : '—') + '</td>',
+      '</tr>'
+    ].join('');
   }).join('');
 
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<style>body{font-family:'Noto Sans Tamil',Arial,sans-serif;padding:20px;color:#1f2937;}'
-    +'h1{color:#92400e;margin-bottom:4px;}h2{color:#c05621;font-size:14px;font-weight:normal;margin-bottom:20px;}'
-    +'table{width:100%;border-collapse:collapse;font-size:13px;}'
-    +'th{background:#92400e;color:#fff;padding:8px 10px;text-align:left;}'
-    +'tr:nth-child(even){background:#fff7ed;}'
-    +'@media print{body{padding:10px;}}</style></head>'
-    +'<body>'
-    +'<h1>🙏 கோவிலூர் மடாலயம் — குருபூஜை அட்டவணை</h1>'
-    +'<h2>பராபவ வருஷம் 2026-27 &nbsp;|&nbsp; மொத்தம்: '+sorted.length+' குருபூஜைகள்</h2>'
-    +'<table><thead><tr>'
-    +'<th style="width:40px">#</th>'
-    +'<th>தேதி</th>'
-    +'<th>மாதம் — நட்சத்திரம்</th>'
-    +'<th>குரு / நிகழ்வு பெயர்</th>'
-    +'<th style="width:60px;text-align:center">பேர்</th>'
-    +'<th style="width:100px;text-align:center">அழைப்பு</th>'
-    +'</tr></thead><tbody>'+rows+'</tbody></table>'
-    +'<p style="margin-top:20px;font-size:11px;color:#9ca3af;">அச்சிடப்பட்டது: '+new Date().toLocaleDateString('en-IN')+'</p>'
-    +'</body></html>';
+  const css = [
+    'body { font-family: Arial, sans-serif; padding: 20px; color: #1f2937; }',
+    'h1 { color: #92400e; margin-bottom: 4px; font-size: 18px; }',
+    'h2 { color: #c05621; font-size: 13px; font-weight: normal; margin-bottom: 16px; }',
+    'table { width: 100%; border-collapse: collapse; font-size: 13px; }',
+    'th { background: #92400e; color: #fff; padding: 8px; text-align: left; }',
+    'tr:nth-child(even) { background: #fff7ed; }',
+    '.footer { margin-top: 16px; font-size: 11px; color: #9ca3af; }'
+  ].join(' ');
 
-  const w = window.open('','_blank','width=900,height=700');
+  const html = [
+    '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+    '<style>' + css + '</style></head><body>',
+    '<h1>🙏 கோவிலூர் மடாலயம் — குருபூஜை அட்டவணை</h1>',
+    '<h2>பராபவ வருஷம் 2026-27 | மொத்தம்: ' + sorted.length + ' குருபூஜைகள்</h2>',
+    '<table><thead><tr>',
+    '<th style="width:35px">#</th>',
+    '<th>தேதி</th>',
+    '<th>மாதம் | நட்சத்திரம்</th>',
+    '<th>குரு / நிகழ்வு பெயர்</th>',
+    '<th style="width:55px;text-align:center">பேர்</th>',
+    '<th style="width:90px;text-align:center">அழைப்பு</th>',
+    '</tr></thead><tbody>' + rows + '</tbody></table>',
+    '<p class="footer">அச்சிடப்பட்டது: ' + new Date().toLocaleDateString('en-IN') + '</p>',
+    '</body></html>'
+  ].join('');
+
+  const w = window.open('', '_blank', 'width=900,height=700');
   w.document.write(html);
   w.document.close();
-  setTimeout(()=>w.print(), 500);
+  setTimeout(function() { w.print(); }, 600);
 };
 
 const DEFAULT_SAINTS = [
