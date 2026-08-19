@@ -338,6 +338,180 @@ const printLabels = (saints) => {
   w.document.close();
 };
 
+const printAllLabels = (saints) => {
+  // All non-public saints with contacts — full year
+  const labels = [];
+  const sorted = [...saints]
+    .filter(s => s.date && !s.isPublic)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const EM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  sorted.forEach(s => {
+    if (!s.contacts || s.contacts.length === 0) return;
+    s.contacts.forEach(c => {
+      if (!c.name) return;
+      const dt = new Date(s.date + 'T00:00:00');
+      const dateStr = dt.getDate() + ' ' + EM[dt.getMonth()] + ' ' + dt.getFullYear();
+      labels.push({
+        toName: c.name,
+        address: c.address || '',
+        address2: c.address2 || '',
+        phone: c.phone || '',
+        guruName: s.name,
+        date: dateStr,
+        star: s.star,
+        month: s.tamilMonth
+      });
+    });
+  });
+
+  if (labels.length === 0) {
+    alert('முகவரி உள்ள தொடர்புகள் இல்லை. குரு பட்டியலில் முகவரி சேர்க்கவும்.');
+    return;
+  }
+
+  const labelHtml = labels.map((l, i) => {
+    const addrLine = [l.address, l.address2].filter(Boolean).join(', ');
+    return [
+      '<div class="label">',
+      '<div class="guru-ref">Re: ' + l.guruName + ' Guru Pooja — ' + l.date + '</div>',
+      '<div class="to-line">To,</div>',
+      '<div class="name">' + l.toName + '</div>',
+      addrLine ? '<div class="addr">' + addrLine + '</div>' : '',
+      '<div class="from-stamp">Koviloor Madalayam, Sivaganga - 630108</div>',
+      '</div>'
+    ].join('');
+  }).join('');
+
+  const css = [
+    '* { box-sizing: border-box; margin: 0; padding: 0; }',
+    'body { font-family: Arial, sans-serif; background: #fff; }',
+    '.page { padding: 10mm; }',
+    '.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6mm; }',
+    '.label {',
+    '  border: 1.5px solid #888;',
+    '  border-radius: 4px;',
+    '  padding: 10px 14px;',
+    '  min-height: 65mm;',
+    '  display: flex;',
+    '  flex-direction: column;',
+    '  justify-content: space-between;',
+    '  page-break-inside: avoid;',
+    '}',
+    '.guru-ref { font-size: 10px; color: #888; border-bottom: 1px dotted #ccc; padding-bottom: 4px; margin-bottom: 8px; }',
+    '.to-line { font-size: 13px; margin-bottom: 3px; }',
+    '.name { font-size: 17px; font-weight: bold; margin-bottom: 6px; }',
+    '.addr { font-size: 14px; line-height: 1.7; flex: 1; }',
+    '.from-stamp { font-size: 11px; color: #555; border-top: 1px dotted #ccc; margin-top: 8px; padding-top: 4px; text-align: right; }',
+    'h1 { font-size: 16px; margin-bottom: 8px; color: #92400e; }',
+    'h2 { font-size: 12px; font-weight: normal; color: #666; margin-bottom: 6mm; }',
+    '@media print {',
+    '  .no-print { display: none; }',
+    '  body { padding: 0; }',
+    '  .page { padding: 8mm; }',
+    '}'
+  ].join(' ');
+
+  const html = [
+    '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+    '<style>' + css + '</style></head><body>',
+    '<div class="page">',
+    '<div class="no-print" style="margin-bottom:8px;display:flex;gap:8px;align-items:center;">',
+    '<h1 style="margin:0;">🙏 Koviloor Madalayam — Address Labels (' + labels.length + ') — Full Year 2026-27</h1>',
+    '<button onclick="window.print()" style="padding:6px 14px;background:#c05621;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;">🖨 Print Labels</button>',
+    '</div>',
+    '<h2 class="no-print">பராபவ வருஷம் 2026-27 | ' + labels.length + ' labels | 3 per row</h2>',
+    '<div class="grid">' + labelHtml + '</div>',
+    '</div></body></html>'
+  ].join('');
+
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(html);
+  w.document.close();
+};
+
+const messageAll = (saints) => {
+  // All non-public saints with contacts — full year
+  const EM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const WD = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  const items = [];
+  [...saints]
+    .filter(s => s.date && !s.isPublic)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .forEach(s => {
+      if (!s.contacts || s.contacts.length === 0) return;
+      const dt = new Date(s.date + 'T00:00:00');
+      const dateStr = dt.getDate() + ' ' + EM[dt.getMonth()] + ' ' + dt.getFullYear() + ' (' + WD[dt.getDay()] + ')';
+      const letter = generateLetter(s);
+      s.contacts.forEach(c => {
+        if (!c.name) return;
+        const phones = [c.phone, c.phone2, c.phone3, c.whatsapp].filter(Boolean);
+        items.push({ c, s, dateStr, letter, phones });
+      });
+    });
+
+  if (items.length === 0) {
+    alert('தொடர்பு உள்ள குருபூஜைகள் இல்லை. முதலில் குரு பட்டியலில் குடும்ப தொடர்பு சேர்க்கவும்.');
+    return;
+  }
+
+  const makeWALink = (phone, msg) => {
+    const clean = phone.replace(/[^0-9]/g, '');
+    const num = clean.length === 10 ? '91' + clean : clean;
+    return 'https://wa.me/' + num + '?text=' + encodeURIComponent(msg);
+  };
+
+  const rows = items.map((item, i) => {
+    const { c, s, dateStr, letter, phones } = item;
+    const waLinks = phones.map(p =>
+      '<a href="' + makeWALink(p, letter) + '" target="_blank" style="display:inline-block;background:#25D366;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:12px;margin:2px;">📱 ' + p + '</a>'
+    ).join(' ');
+    const copyId = 'msg_' + i;
+    return [
+      '<div style="border:1px solid #e5e7eb;border-radius:6px;padding:14px;margin-bottom:12px;background:#fff;">',
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;">',
+      '<div>',
+      '<div style="font-weight:700;font-size:15px;">' + c.name + '</div>',
+      '<div style="font-size:12px;color:#c05621;margin-top:2px;">📿 ' + s.name + ' — ' + dateStr + '</div>',
+      c.address ? '<div style="font-size:12px;color:#6b7280;margin-top:2px;">📍 ' + c.address + '</div>' : '',
+      '</div>',
+      '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">',
+      waLinks || '<span style="font-size:11px;color:#9ca3af;">தொலைபேசி இல்லை</span>',
+      '<button onclick="navigator.clipboard.writeText(document.getElementById('' + copyId + '').value).then(()=>alert('Copied!'))" ',
+      'style="margin-top:4px;padding:4px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;font-size:11px;">📋 Copy Letter</button>',
+      '</div>',
+      '</div>',
+      '<textarea id="' + copyId + '" style="width:100%;height:140px;font-size:12px;font-family:inherit;border:1px solid #e5e7eb;border-radius:4px;padding:8px;resize:vertical;background:#fffff8;">' + letter.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>',
+      '</div>'
+    ].join('');
+  }).join('');
+
+  const css = [
+    'body{font-family:Arial,sans-serif;background:#f9fafb;padding:16px;color:#1f2937;}',
+    'h1{color:#92400e;font-size:17px;margin-bottom:4px;}',
+    'h2{color:#666;font-size:12px;font-weight:normal;margin-bottom:16px;}',
+    '.toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}',
+    '.btn{padding:7px 14px;border:none;border-radius:5px;cursor:pointer;font-size:13px;font-weight:600;}',
+    '@media print{.no-print{display:none;}}'
+  ].join('');
+
+  const html = [
+    '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+    '<style>' + css + '</style></head><body>',
+    '<h1>🙏 Koviloor Madalayam — Message All Contacts</h1>',
+    '<h2>பராபவ வருஷம் 2026-27 | முழு வருடம் | ' + items.length + ' தொடர்புகள்</h2>',
+    '<div class="toolbar no-print">',
+    '<span style="font-size:12px;color:#6b7280;align-self:center;">📱 WhatsApp link-ஐ click செய்தால் message அனுப்பலாம்</span>',
+    '</div>',
+    rows,
+    '</body></html>'
+  ].join('');
+
+  const w = window.open('', '_blank', 'width=800,height=700');
+  w.document.write(html);
+  w.document.close();
+};
+
 const DEFAULT_SAINTS = [
   {id:'1',name:'திருநாவுக்கரசர்',tamilMonth:'சித்திரை',star:'சதயம்',isPublic:false,pax:100,contacts:[],notes:'',date:'2026-04-14',alertSent:false,calAdded:false},
   {id:'2',name:'கோபாலப்ப ஐயா',tamilMonth:'சித்திரை',star:'உத்திரட்டாதி',isPublic:false,pax:75,contacts:[],notes:'',date:'2026-04-16',alertSent:false,calAdded:false},
@@ -760,7 +934,9 @@ function Dashboard() {
             <div style={{display:'flex',gap:'.5rem'}}>
               <button onClick={()=>downloadICS(saints)} style={{...smBtn,background:'#1a73e8',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>⬇️ .ics Calendar</button>
               <button onClick={()=>exportToExcel(saints)} style={{...smBtn,background:'#16a34a',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>📊 Excel</button>
-              <button onClick={()=>printLabels(saints)} style={{...smBtn,background:'#7c3aed',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>🏷️ Labels</button>
+              <button onClick={()=>printLabels(saints)} style={{...smBtn,background:'#7c3aed',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>🏷️ 60d Labels</button>
+              <button onClick={()=>printAllLabels(saints)} style={{...smBtn,background:'#5b21b6',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>🏷️ All Labels</button>
+              <button onClick={()=>messageAll(saints)} style={{...smBtn,background:'#25D366',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>📱 Message All</button>
             </div>
           </div>
           {alertsDue.length>0&&<div style={{background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:'.75rem',padding:'1rem'}}>
@@ -819,7 +995,9 @@ function Dashboard() {
               <button onClick={()=>downloadICS(saints)} style={{...smBtn,background:'#1a73e8',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>⬇️ Calendar</button>
               <button onClick={()=>printSchedule(saints)} style={{...smBtn,background:'#c05621',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>🖨️ அட்டவணை அச்சு</button>
               <button onClick={()=>exportToExcel(saints)} style={{...smBtn,background:'#16a34a',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>📊 Excel Export</button>
-              <button onClick={()=>printLabels(saints)} style={{...smBtn,background:'#7c3aed',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>🏷️ முகவரி லேபல்</button>
+              <button onClick={()=>printLabels(saints)} style={{...smBtn,background:'#7c3aed',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>🏷️ 60 நாள் Labels</button>
+              <button onClick={()=>printAllLabels(saints)} style={{...smBtn,background:'#5b21b6',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>🏷️ All Labels</button>
+              <button onClick={()=>messageAll(saints)} style={{...smBtn,background:'#25D366',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>📱 Message All</button>
             </div>
           </div>
           <div style={{background:'#fef3c7',border:'1px solid #fcd34d',borderRadius:'.5rem',padding:'.65rem .9rem',fontSize:'.8rem',color:'#92400e'}}>
