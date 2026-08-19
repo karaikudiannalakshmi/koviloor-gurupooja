@@ -449,12 +449,14 @@ const messageAll = (saints) => {
     });
 
   if (items.length === 0) {
-    alert('தொடர்பு உள்ள குருபூஜைகள் இல்லை. முதலில் குரு பட்டியலில் குடும்ப தொடர்பு சேர்க்கவும்.');
+    alert('தொடர்பு உள்ள குருபூஜைகள் இல்லை. குரு பட்டியலில் குடும்ப தொடர்பு சேர்க்கவும்.');
     return;
   }
 
   const w = window.open('', '_blank', 'width=820,height=750');
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' +
+  const doc = w.document;
+  doc.open();
+  doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' +
     'body{font-family:Arial,sans-serif;background:#f9fafb;padding:16px;color:#1f2937;}' +
     'h1{color:#92400e;font-size:17px;margin-bottom:4px;}' +
     'h2{color:#666;font-size:12px;font-weight:normal;margin-bottom:14px;}' +
@@ -462,38 +464,40 @@ const messageAll = (saints) => {
     '.name{font-weight:700;font-size:15px;}' +
     '.meta{font-size:12px;color:#c05621;margin-top:2px;}' +
     '.addr{font-size:12px;color:#6b7280;margin-top:2px;}' +
-    '.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}' +
+    '.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center;}' +
     '.wa{display:inline-block;background:#25D366;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:12px;}' +
     'textarea{width:100%;height:130px;font-size:12px;font-family:inherit;border:1px solid #e5e7eb;border-radius:4px;padding:8px;margin-top:8px;resize:vertical;background:#fffff8;box-sizing:border-box;}' +
     '.copybtn{padding:5px 12px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;font-size:12px;}' +
     '</style></head><body>' +
-    '<h1>🙏 Koviloor Madalayam — Message All Contacts</h1>' +
-    '<h2>பராபவ வருஷம் 2026-27 | முழு வருடம் | ' + items.length + ' தொடர்புகள்</h2>');
+    '<h1>Koviloor Madalayam — Message All Contacts</h1>' +
+    '<h2>பராபவ வருஷம் 2026-27 | ' + items.length + ' தொடர்புகள்</h2>');
 
   items.forEach((item, i) => {
     const { c, s, dateStr, letter, phones } = item;
     const waLinks = phones.map(p => {
       const clean = p.replace(/[^0-9]/g, '');
       const num = clean.length === 10 ? '91' + clean : clean;
-      return '<a class="wa" href="https://wa.me/' + num + '?text=' + encodeURIComponent(letter) + '" target="_blank">📱 ' + p + '</a>';
+      const url = 'https://wa.me/' + num + '?text=' + encodeURIComponent(letter);
+      return '<a class="wa" href="' + url + '" target="_blank">WhatsApp ' + p + '</a>';
     }).join('');
 
-    w.document.write(
+    doc.write(
       '<div class="card">' +
       '<div class="name">' + c.name + '</div>' +
-      '<div class="meta">📿 ' + s.name + ' — ' + dateStr + '</div>' +
-      (c.address ? '<div class="addr">📍 ' + c.address + '</div>' : '') +
+      '<div class="meta">' + s.name + ' — ' + dateStr + '</div>' +
+      (c.address ? '<div class="addr">' + c.address + '</div>' : '') +
       '<div class="actions">' +
       (waLinks || '<span style="font-size:11px;color:#9ca3af;">தொலைபேசி இல்லை</span>') +
-      '<button class="copybtn" onclick="var t=this.parentNode.nextSibling;t.select();document.execCommand('copy');alert('Copied!')">📋 Copy</button>' +
+      '<button class="copybtn" data-idx="' + i + '">Copy Letter</button>' +
       '</div>' +
-      '<textarea>' + letter + '</textarea>' +
+      '<textarea id="ta' + i + '">' + letter + '</textarea>' +
       '</div>'
     );
   });
 
-  w.document.write('</body></html>');
-  w.document.close();
+  doc.write('<script>document.querySelectorAll(".copybtn").forEach(function(btn){btn.addEventListener("click",function(){var ta=document.getElementById("ta"+this.dataset.idx);ta.select();document.execCommand("copy");alert("Copied!");});});<\/script>');
+  doc.write('</body></html>');
+  doc.close();
 };
 
 const DEFAULT_SAINTS = [
