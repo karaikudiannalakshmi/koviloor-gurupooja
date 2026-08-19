@@ -241,6 +241,95 @@ const exportToExcel = (saints) => {
   XLSX.writeFile(wb, 'Koviloor-GuruPooja-2026-27.xlsx');
 };
 
+const printLabels = (saints) => {
+  // Collect all contacts with addresses from saints that have invites
+  const labels = [];
+  const sorted = [...saints].filter(s => s.date).sort((a, b) => a.date.localeCompare(b.date));
+  const EM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  sorted.forEach(s => {
+    if (!s.contacts || s.contacts.length === 0) return;
+    s.contacts.forEach(c => {
+      if (!c.name) return;
+      const dt = new Date(s.date + 'T00:00:00');
+      const dateStr = dt.getDate() + ' ' + EM[dt.getMonth()] + ' ' + dt.getFullYear();
+      labels.push({
+        toName: c.name,
+        address: c.address || '',
+        address2: c.address2 || '',
+        phone: c.phone || '',
+        guruName: s.name,
+        date: dateStr,
+        star: s.star,
+        month: s.tamilMonth
+      });
+    });
+  });
+
+  if (labels.length === 0) {
+    alert('முகவரி உள்ள தொடர்புகள் இல்லை. முதலில் குரு பட்டியலில் முகவரி சேர்க்கவும்.');
+    return;
+  }
+
+  const labelHtml = labels.map((l, i) => {
+    const addrLine = [l.address, l.address2].filter(Boolean).join(', ');
+    return [
+      '<div class="label">',
+      '<div class="guru-ref">Re: ' + l.guruName + ' Guru Pooja — ' + l.date + '</div>',
+      '<div class="to-line">To,</div>',
+      '<div class="name">' + l.toName + '</div>',
+      addrLine ? '<div class="addr">' + addrLine + '</div>' : '',
+      '<div class="from-stamp">Koviloor Madalayam, Sivaganga - 630108</div>',
+      '</div>'
+    ].join('');
+  }).join('');
+
+  const css = [
+    '* { box-sizing: border-box; margin: 0; padding: 0; }',
+    'body { font-family: Arial, sans-serif; background: #fff; }',
+    '.page { padding: 10mm; }',
+    '.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }',
+    '.label {',
+    '  border: 1px solid #999;',
+    '  border-radius: 3px;',
+    '  padding: 6px 10px;',
+    '  min-height: 55mm;',
+    '  display: flex;',
+    '  flex-direction: column;',
+    '  justify-content: space-between;',
+    '  page-break-inside: avoid;',
+    '}',
+    '.guru-ref { font-size: 8px; color: #888; border-bottom: 1px dotted #ccc; padding-bottom: 3px; margin-bottom: 5px; }',
+    '.to-line { font-size: 10px; margin-bottom: 2px; }',
+    '.name { font-size: 13px; font-weight: bold; margin-bottom: 4px; }',
+    '.addr { font-size: 11px; line-height: 1.5; flex: 1; }',
+    '.from-stamp { font-size: 8px; color: #555; border-top: 1px dotted #ccc; margin-top: 5px; padding-top: 3px; text-align: right; }',
+    'h1 { font-size: 14px; margin-bottom: 8px; color: #92400e; }',
+    'h2 { font-size: 11px; font-weight: normal; color: #666; margin-bottom: 6mm; }',
+    '@media print {',
+    '  .no-print { display: none; }',
+    '  body { padding: 0; }',
+    '  .page { padding: 8mm; }',
+    '}'
+  ].join(' ');
+
+  const html = [
+    '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+    '<style>' + css + '</style></head><body>',
+    '<div class="page">',
+    '<div class="no-print" style="margin-bottom:8px;display:flex;gap:8px;align-items:center;">',
+    '<h1 style="margin:0;">🙏 Koviloor Madalayam — Address Labels (' + labels.length + ')</h1>',
+    '<button onclick="window.print()" style="padding:6px 14px;background:#c05621;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;">🖨 Print Labels</button>',
+    '</div>',
+    '<h2 class="no-print">பராபவ வருஷம் 2026-27 | ' + labels.length + ' labels | 3 per row</h2>',
+    '<div class="grid">' + labelHtml + '</div>',
+    '</div></body></html>'
+  ].join('');
+
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(html);
+  w.document.close();
+};
+
 const DEFAULT_SAINTS = [
   {id:'1',name:'திருநாவுக்கரசர்',tamilMonth:'சித்திரை',star:'சதயம்',isPublic:false,pax:100,contacts:[],notes:'',date:'2026-04-14',alertSent:false,calAdded:false},
   {id:'2',name:'கோபாலப்ப ஐயா',tamilMonth:'சித்திரை',star:'உத்திரட்டாதி',isPublic:false,pax:75,contacts:[],notes:'',date:'2026-04-16',alertSent:false,calAdded:false},
@@ -663,6 +752,7 @@ function Dashboard() {
             <div style={{display:'flex',gap:'.5rem'}}>
               <button onClick={()=>downloadICS(saints)} style={{...smBtn,background:'#1a73e8',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>⬇️ .ics Calendar</button>
               <button onClick={()=>exportToExcel(saints)} style={{...smBtn,background:'#16a34a',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>📊 Excel</button>
+              <button onClick={()=>printLabels(saints)} style={{...smBtn,background:'#7c3aed',color:'#fff',padding:'.55rem .9rem',fontWeight:700,borderRadius:'.5rem',fontSize:'.82rem',whiteSpace:'nowrap'}}>🏷️ Labels</button>
             </div>
           </div>
           {alertsDue.length>0&&<div style={{background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:'.75rem',padding:'1rem'}}>
@@ -721,6 +811,7 @@ function Dashboard() {
               <button onClick={()=>downloadICS(saints)} style={{...smBtn,background:'#1a73e8',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>⬇️ Calendar</button>
               <button onClick={()=>printSchedule(saints)} style={{...smBtn,background:'#c05621',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>🖨️ அட்டவணை அச்சு</button>
               <button onClick={()=>exportToExcel(saints)} style={{...smBtn,background:'#16a34a',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>📊 Excel Export</button>
+              <button onClick={()=>printLabels(saints)} style={{...smBtn,background:'#7c3aed',color:'#fff',padding:'.35rem .75rem',fontWeight:600,fontSize:'.78rem'}}>🏷️ முகவரி லேபல்</button>
             </div>
           </div>
           <div style={{background:'#fef3c7',border:'1px solid #fcd34d',borderRadius:'.5rem',padding:'.65rem .9rem',fontSize:'.8rem',color:'#92400e'}}>
