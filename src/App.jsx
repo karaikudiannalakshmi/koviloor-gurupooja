@@ -242,9 +242,17 @@ const exportToExcel = (saints) => {
 };
 
 const printLabels = (saints) => {
-  // Collect all contacts with addresses from saints that have invites
+  // Only next 60 days, non-public, with contacts
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in60 = new Date(today); in60.setDate(today.getDate() + 60);
   const labels = [];
-  const sorted = [...saints].filter(s => s.date).sort((a, b) => a.date.localeCompare(b.date));
+  const sorted = [...saints]
+    .filter(s => {
+      if (!s.date || s.isPublic) return false;
+      const d = new Date(s.date + 'T00:00:00');
+      return d >= today && d <= in60;
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
   const EM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   sorted.forEach(s => {
     if (!s.contacts || s.contacts.length === 0) return;
@@ -266,7 +274,7 @@ const printLabels = (saints) => {
   });
 
   if (labels.length === 0) {
-    alert('முகவரி உள்ள தொடர்புகள் இல்லை. முதலில் குரு பட்டியலில் முகவரி சேர்க்கவும்.');
+    alert('அடுத்த 60 நாட்களில் தனிப்பட்ட (non-public) குருபூஜைகள் இல்லை, அல்லது முகவரி சேர்க்கப்படவில்லை.');
     return;
   }
 
@@ -317,7 +325,7 @@ const printLabels = (saints) => {
     '<style>' + css + '</style></head><body>',
     '<div class="page">',
     '<div class="no-print" style="margin-bottom:8px;display:flex;gap:8px;align-items:center;">',
-    '<h1 style="margin:0;">🙏 Koviloor Madalayam — Address Labels (' + labels.length + ')</h1>',
+    '<h1 style="margin:0;">🙏 Koviloor Madalayam — Address Labels (' + labels.length + ') — Next 60 Days</h1>',
     '<button onclick="window.print()" style="padding:6px 14px;background:#c05621;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;">🖨 Print Labels</button>',
     '</div>',
     '<h2 class="no-print">பராபவ வருஷம் 2026-27 | ' + labels.length + ' labels | 3 per row</h2>',
