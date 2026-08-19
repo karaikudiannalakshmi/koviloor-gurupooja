@@ -430,10 +430,8 @@ const printAllLabels = (saints) => {
 };
 
 const messageAll = (saints) => {
-  // All non-public saints with contacts — full year
   const EM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const WD = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-
   const items = [];
   [...saints]
     .filter(s => s.date && !s.isPublic)
@@ -455,60 +453,46 @@ const messageAll = (saints) => {
     return;
   }
 
-  const makeWALink = (phone, msg) => {
-    const clean = phone.replace(/[^0-9]/g, '');
-    const num = clean.length === 10 ? '91' + clean : clean;
-    return 'https://wa.me/' + num + '?text=' + encodeURIComponent(msg);
-  };
+  const w = window.open('', '_blank', 'width=820,height=750');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' +
+    'body{font-family:Arial,sans-serif;background:#f9fafb;padding:16px;color:#1f2937;}' +
+    'h1{color:#92400e;font-size:17px;margin-bottom:4px;}' +
+    'h2{color:#666;font-size:12px;font-weight:normal;margin-bottom:14px;}' +
+    '.card{border:1px solid #e5e7eb;border-radius:6px;padding:14px;margin-bottom:12px;background:#fff;}' +
+    '.name{font-weight:700;font-size:15px;}' +
+    '.meta{font-size:12px;color:#c05621;margin-top:2px;}' +
+    '.addr{font-size:12px;color:#6b7280;margin-top:2px;}' +
+    '.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}' +
+    '.wa{display:inline-block;background:#25D366;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:12px;}' +
+    'textarea{width:100%;height:130px;font-size:12px;font-family:inherit;border:1px solid #e5e7eb;border-radius:4px;padding:8px;margin-top:8px;resize:vertical;background:#fffff8;box-sizing:border-box;}' +
+    '.copybtn{padding:5px 12px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;font-size:12px;}' +
+    '</style></head><body>' +
+    '<h1>🙏 Koviloor Madalayam — Message All Contacts</h1>' +
+    '<h2>பராபவ வருஷம் 2026-27 | முழு வருடம் | ' + items.length + ' தொடர்புகள்</h2>');
 
-  const rows = items.map((item, i) => {
+  items.forEach((item, i) => {
     const { c, s, dateStr, letter, phones } = item;
-    const waLinks = phones.map(p =>
-      '<a href="' + makeWALink(p, letter) + '" target="_blank" style="display:inline-block;background:#25D366;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:12px;margin:2px;">📱 ' + p + '</a>'
-    ).join(' ');
-    const copyId = 'msg_' + i;
-    return [
-      '<div style="border:1px solid #e5e7eb;border-radius:6px;padding:14px;margin-bottom:12px;background:#fff;">',
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;">',
-      '<div>',
-      '<div style="font-weight:700;font-size:15px;">' + c.name + '</div>',
-      '<div style="font-size:12px;color:#c05621;margin-top:2px;">📿 ' + s.name + ' — ' + dateStr + '</div>',
-      c.address ? '<div style="font-size:12px;color:#6b7280;margin-top:2px;">📍 ' + c.address + '</div>' : '',
-      '</div>',
-      '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">',
-      waLinks || '<span style="font-size:11px;color:#9ca3af;">தொலைபேசி இல்லை</span>',
-      '<button onclick="navigator.clipboard.writeText(document.getElementById('' + copyId + '').value).then(()=>alert('Copied!'))" ',
-      'style="margin-top:4px;padding:4px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;font-size:11px;">📋 Copy Letter</button>',
-      '</div>',
-      '</div>',
-      '<textarea id="' + copyId + '" style="width:100%;height:140px;font-size:12px;font-family:inherit;border:1px solid #e5e7eb;border-radius:4px;padding:8px;resize:vertical;background:#fffff8;">' + letter.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>',
+    const waLinks = phones.map(p => {
+      const clean = p.replace(/[^0-9]/g, '');
+      const num = clean.length === 10 ? '91' + clean : clean;
+      return '<a class="wa" href="https://wa.me/' + num + '?text=' + encodeURIComponent(letter) + '" target="_blank">📱 ' + p + '</a>';
+    }).join('');
+
+    w.document.write(
+      '<div class="card">' +
+      '<div class="name">' + c.name + '</div>' +
+      '<div class="meta">📿 ' + s.name + ' — ' + dateStr + '</div>' +
+      (c.address ? '<div class="addr">📍 ' + c.address + '</div>' : '') +
+      '<div class="actions">' +
+      (waLinks || '<span style="font-size:11px;color:#9ca3af;">தொலைபேசி இல்லை</span>') +
+      '<button class="copybtn" onclick="var t=this.parentNode.nextSibling;t.select();document.execCommand('copy');alert('Copied!')">📋 Copy</button>' +
+      '</div>' +
+      '<textarea>' + letter + '</textarea>' +
       '</div>'
-    ].join('');
-  }).join('');
+    );
+  });
 
-  const css = [
-    'body{font-family:Arial,sans-serif;background:#f9fafb;padding:16px;color:#1f2937;}',
-    'h1{color:#92400e;font-size:17px;margin-bottom:4px;}',
-    'h2{color:#666;font-size:12px;font-weight:normal;margin-bottom:16px;}',
-    '.toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}',
-    '.btn{padding:7px 14px;border:none;border-radius:5px;cursor:pointer;font-size:13px;font-weight:600;}',
-    '@media print{.no-print{display:none;}}'
-  ].join('');
-
-  const html = [
-    '<!DOCTYPE html><html><head><meta charset="UTF-8">',
-    '<style>' + css + '</style></head><body>',
-    '<h1>🙏 Koviloor Madalayam — Message All Contacts</h1>',
-    '<h2>பராபவ வருஷம் 2026-27 | முழு வருடம் | ' + items.length + ' தொடர்புகள்</h2>',
-    '<div class="toolbar no-print">',
-    '<span style="font-size:12px;color:#6b7280;align-self:center;">📱 WhatsApp link-ஐ click செய்தால் message அனுப்பலாம்</span>',
-    '</div>',
-    rows,
-    '</body></html>'
-  ].join('');
-
-  const w = window.open('', '_blank', 'width=800,height=700');
-  w.document.write(html);
+  w.document.write('</body></html>');
   w.document.close();
 };
 
