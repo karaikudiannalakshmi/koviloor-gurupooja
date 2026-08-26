@@ -48,6 +48,28 @@ const MONTH_STARTS = {
   'மார்கழி':new Date('2026-12-16'),'தை':new Date('2027-01-14'),
   'மாசி':new Date('2027-02-13'),'பங்குனி':new Date('2027-03-15'),
 };
+// Tamil month date ranges 2026-27
+const TAMIL_MONTH_RANGES = [
+  ['சித்திரை', '2026-04-14', '2026-05-14'],
+  ['வைகாசி',  '2026-05-15', '2026-06-14'],
+  ['ஆனி',     '2026-06-15', '2026-07-16'],
+  ['ஆடி',     '2026-07-17', '2026-08-16'],
+  ['ஆவணி',   '2026-08-17', '2026-09-16'],
+  ['புரட்டாசி','2026-09-17', '2026-10-16'],
+  ['ஐப்பசி',  '2026-10-17', '2026-11-15'],
+  ['கார்த்திகை','2026-11-16','2026-12-15'],
+  ['மார்கழி', '2026-12-16', '2027-01-13'],
+  ['தை',      '2027-01-14', '2027-02-12'],
+  ['மாசி',    '2027-02-13', '2027-03-14'],
+  ['பங்குனி', '2027-03-15', '2027-04-13'],
+];
+
+const detectTamilMonth = (dateStr) => {
+  if (!dateStr) return null;
+  const r = TAMIL_MONTH_RANGES.find(([m, s, e]) => dateStr >= s && dateStr <= e);
+  return r ? r[0] : null;
+};
+
 const getTamilDate = (dateStr, month) => {
   const d = new Date(dateStr+'T00:00:00');
   const s = MONTH_STARTS[month];
@@ -645,7 +667,15 @@ function SaintModal({saint,onSave,onClose}){
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.75rem'}}>
             <div><label style={lbl}>பராபவ தேதி</label>
-              <input type="date" value={f.date} onChange={e=>upd('date',e.target.value)} style={inp} min="2026-04-14" max="2027-04-13"/></div>
+              <input type="date" value={f.date} onChange={e=>{
+                const nd=e.target.value;
+                const dm=detectTamilMonth(nd);
+                if(dm) setF(p=>({...p,date:nd,tamilMonth:dm}));
+                else upd('date',nd);
+              }} style={inp} min="2026-04-14" max="2027-04-13"/>
+              {f.date && <div style={{fontSize:'.75rem',color:'#c05621',marginTop:'.2rem',fontWeight:600}}>
+                {detectTamilMonth(f.date)||f.tamilMonth} மாதம் {getTamilDate(f.date, detectTamilMonth(f.date)||f.tamilMonth)}ம் நாள்
+              </div>}</div>
             <div><label style={lbl}>எதிர்பார்க்கப்படும் பேர்</label>
               <input type="number" value={f.pax} min="1" onChange={e=>upd('pax',parseInt(e.target.value)||0)} style={inp}/></div>
           </div>
@@ -1022,9 +1052,20 @@ function Dashboard() {
                     <td style={{padding:'.55rem .75rem',color:'#6b7280',whiteSpace:'nowrap'}}>{s.tamilMonth}</td>
                     <td style={{padding:'.55rem .75rem',color:'#6b7280',whiteSpace:'nowrap'}}>{s.star}</td>
                     <td style={{padding:'.55rem .75rem'}}>
+                      <div style={{display:'flex',flexDirection:'column',gap:'.2rem'}}>
                       <input type="date" value={s.date||''} min="2026-04-14" max="2027-04-13"
-                        onChange={e=>upd(s.id,{date:e.target.value})}
+                        onChange={e=>{
+                          const newDate = e.target.value;
+                          const detectedMonth = detectTamilMonth(newDate);
+                          const updates = {date:newDate};
+                          if(detectedMonth && detectedMonth !== s.tamilMonth) updates.tamilMonth = detectedMonth;
+                          upd(s.id, updates);
+                        }}
                         style={{border:'1px solid #d97706',borderRadius:'.35rem',padding:'.3rem .45rem',fontSize:'.78rem',width:130}}/>
+                      {s.date && <span style={{fontSize:'.7rem',color:'#c05621',fontWeight:600}}>
+                        {detectTamilMonth(s.date)||'?'} {getTamilDate(s.date, detectTamilMonth(s.date)||s.tamilMonth)}ம் நாள்
+                      </span>}
+                    </div>
                     </td>
                     <td style={{padding:'.55rem .75rem',textAlign:'center'}}>
                       <input type="checkbox" checked={s.isPublic} onChange={e=>upd(s.id,{isPublic:e.target.checked})} style={{accentColor:'#c05621',width:15,height:15}}/>
