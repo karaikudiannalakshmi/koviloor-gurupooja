@@ -398,7 +398,12 @@ export default function App() {
                     <tr key={s.id} style={{background:i%2===0?'#fff':'#fff7ed',borderBottom:'1px solid #fed7aa'}}>
                       <td style={{padding:'.55rem .5rem',color:'#9ca3af',fontSize:'.75rem'}}>{s.id}</td>
                       <td style={{padding:'.55rem .75rem'}}>
-                        <div style={{fontWeight:600,color:'#1f2937'}}>{s.name}</div>
+                        <input
+                          type="text" value={s.name}
+                          onChange={e=>upd(s.id,{name:e.target.value})}
+                          onFocus={e=>e.target.style.borderBottomColor='#c05621'}
+                          onBlur={e=>e.target.style.borderBottomColor='transparent'}
+                          style={{fontWeight:600,color:'#1f2937',background:'transparent',border:'none',borderBottom:'1px dashed transparent',outline:'none',width:'100%',fontSize:'.82rem',padding:0,fontFamily:'inherit',transition:'border-color .15s'}} />
                         {s.notes&&<div style={{fontSize:'.72rem',color:s.notes.includes('⚠')?'#d97706':'#9ca3af'}}>{s.notes}</div>}
                       </td>
                       <td style={{padding:'.55rem .75rem',color:'#6b7280',whiteSpace:'nowrap'}}>{s.tamilMonth}</td>
@@ -442,7 +447,12 @@ export default function App() {
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'1rem'}}>
                   <div style={{flex:1}}>
                     <div style={{display:'flex',gap:'.35rem',flexWrap:'wrap',alignItems:'center',marginBottom:'.3rem'}}>
-                      <span style={{fontWeight:700,color:'#1f2937'}}>{s.name}</span>
+                      <input
+                        type="text" value={s.name}
+                        onChange={e=>upd(s.id,{name:e.target.value})}
+                        onFocus={e=>e.target.style.borderBottomColor='#c05621'}
+                        onBlur={e=>e.target.style.borderBottomColor='transparent'}
+                        style={{fontWeight:700,color:'#1f2937',background:'transparent',border:'none',borderBottom:'1px dashed transparent',outline:'none',fontSize:'inherit',padding:0,fontFamily:'inherit',transition:'border-color .15s'}} />
                       {s.isPublic&&<span style={pill('#ede9fe','#7c3aed')}>பொது</span>}
                       {s.alertSent&&<span style={pill('#dcfce7','#16a34a')}>✉</span>}
                       {s.calAdded&&<span style={pill('#dbeafe','#1d4ed8')}>📅</span>}
