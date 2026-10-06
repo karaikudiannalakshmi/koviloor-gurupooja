@@ -80,7 +80,7 @@ const DS = [
   {id:'42', name:'சின்ன அழகப்ப ஐயா', tamilMonth:'ஐப்பசி', star:'மிருகசீரிஷம்', isPublic:false, pax:75, contacts:[], notes:'⚠ kshaya – பஞ்சாங்கம் உறுதிப்படுத்தவும்', date:'2026-10-30'},
   {id:'43', name:'கீழ்ப்பூங்குடி நாராயண சுவாமிகள்', tamilMonth:'ஐப்பசி', star:'மகம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-11-03'},
   {id:'44', name:'சிதம்பர பொன்னம்பல சுவாமிகள்', tamilMonth:'ஐப்பசி', star:'சித்திரை', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-11-07'},
-  {id:'45', name:'சோர்ணாதபுரம் பழனியப்ப ஐயா', tamilMonth:'ஐப்பசி', star:'உத்திராடம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-11-15'},
+  {id:'45', name:'சொர்ணாதபுரம் பழனியப்ப ஐயா', tamilMonth:'ஐப்பசி', star:'உத்திராடம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-11-15'},
   {id:'46', name:'இரவாரம் வள்ளியப்ப ஐயா', tamilMonth:'கார்த்திகை', star:'திருவாதிரை', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-11-27'},
   {id:'47', name:'காரைக்குடி திருநாவுக்கரசு சுவாமிகள்', tamilMonth:'கார்த்திகை', star:'திருவோணம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-12-13'},
   {id:'48', name:'ஸ்ரீமத் ராமசாமி ஞான தேசிகர் (4வது)', tamilMonth:'மார்கழி', star:'மகம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-12-28'},
