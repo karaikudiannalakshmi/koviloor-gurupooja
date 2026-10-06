@@ -213,29 +213,27 @@ export default function App() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    (async () => {
-      try {
-        // v4: corrected nakshatra dates for Parabava 2026-27
-        const r4 = await window.storage.get('gp_saints_v4');
-        if (r4) { setSaints(JSON.parse(r4.value)); }
-        else {
-          // migrate from v3: preserve contacts/pax/notes entered by admin
-          const r3 = await window.storage.get('gp_saints_v3');
-          if (r3) {
-            const old = JSON.parse(r3.value);
-            const merged = DS.map(s => {
-              const prev = old.find(o => o.id === s.id);
-              return prev ? { ...s, contacts: prev.contacts||[], pax: prev.pax||s.pax,
-                kitchenNotes: prev.kitchenNotes||'', alertSent: prev.alertSent||false, calAdded: prev.calAdded||false } : s;
-            });
-            setSaints(merged);
-          } else { setSaints(DS); }
-        }
-      } catch { setSaints(DS); }
-      setLoaded(true);
-    })();
+    try {
+      // v4: corrected nakshatra dates for Parabava 2026-27
+      const stored = localStorage.getItem('gp_saints_v4');
+      if (stored) { setSaints(JSON.parse(stored)); }
+      else {
+        // migrate from v3: preserve contacts/pax entered by admin
+        const old3 = localStorage.getItem('gp_saints_v3');
+        if (old3) {
+          const old = JSON.parse(old3);
+          const merged = DS.map(s => {
+            const prev = old.find(o => o.id === s.id);
+            return prev ? { ...s, contacts: prev.contacts||[], pax: prev.pax||s.pax,
+              kitchenNotes: prev.kitchenNotes||'', alertSent: prev.alertSent||false, calAdded: prev.calAdded||false } : s;
+          });
+          setSaints(merged);
+        } else { setSaints(DS); }
+      }
+    } catch { setSaints(DS); }
+    setLoaded(true);
   }, []);
-  useEffect(() => { if (loaded) window.storage.set('gp_saints_v4', JSON.stringify(saints)).catch(()=>{}); }, [saints, loaded]);
+  useEffect(() => { if (loaded) { try { localStorage.setItem('gp_saints_v4', JSON.stringify(saints)); } catch {} } }, [saints, loaded]);
 
   const toast$ = (msg, type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),4500); };
   const upd = (id, ch) => setSaints(p => p.map(s => s.id===id ? {...s,...ch} : s));
