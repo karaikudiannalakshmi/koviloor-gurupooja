@@ -8,10 +8,15 @@ const TAMIL_MONTHS = ['சித்திரை','வைகாசி','ஆனி
 const STARS = ['அஸ்வினி','பரணி','கார்த்திகை','ரோகிணி','மிருகசீரிஷம்','திருவாதிரை','புனர்பூசம்','பூசம்','ஆயில்யம்','மகம்','பூரம்','உத்திரம்','ஹஸ்தம்','சித்திரை','சுவாதி','விசாகம்','அனுஷம்','கேட்டை','மூலம்','பூராடம்','உத்திராடம்','திருவோணம்','அவிட்டம்','சதயம்','பூரட்டாதி','உத்திரட்டாதி','ரேவதி'];
 const WEEKDAYS_TM = ['ஞாயிறு','திங்கள்','செவ்வாய்','புதன்','வியாழன்','வெள்ளி','சனி'];
 
+const MONTHS_LONG = ['ஜனவரி','பிப்ரவரி','மார்ச்','ஏப்ரல்','மே','ஜூன்','ஜூலை','ஆகஸ்ட்','செப்டம்பர்','அக்டோபர்','நவம்பர்','டிசம்பர்'];
 const fmtDate = (d) => {
   if (!d) return '—';
   const dt = new Date(d + 'T00:00:00');
   return `${dt.getDate().toString().padStart(2,'0')}.${(dt.getMonth()+1).toString().padStart(2,'0')}.${dt.getFullYear()} (${WEEKDAYS_TM[dt.getDay()]})`;
+};
+const todayTamil = () => {
+  const d = new Date();
+  return `${d.getDate()} ${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`;
 };
 const daysUntil = (ds) => {
   if (!ds) return null;
@@ -27,12 +32,12 @@ const generateLetter = (s) => {
   const ds = s.date ? fmtDate(s.date) : '[தேதி நிர்ணயிக்கப்படவில்லை]';
   const to = s.contacts?.length>0 ? s.contacts[0].name : '[குடும்பத்தினர் பெயர்]';
   const addr = s.contacts?.length>0 && s.contacts[0].address ? s.contacts[0].address : '[முகவரி]';
-  return `${MUTT}\nகோவிலூர், சிவகங்கை மாவட்டம் – 630 108\n\nதேதி: ${new Date().toLocaleDateString('ta-IN')}\n\nமரியாதைக்குரிய\n${to} அவர்களுக்கு,\n${addr}\n\nவணக்கம்.\n\nபொருள்: ${s.name} அவர்களின் குருபூஜை விழா – அழைப்பு\n\nநம் மடாலயத்தில் சமாதியில் வீற்றிருக்கும் மகான் ${s.name} அவர்களின் குருபூஜை விழா வரும் ${ds} அன்று ${s.tamilMonth} மாதம் ${s.star} நட்சத்திர திருநாளில் கோவிலூர் மடாலயத்தில் வைபவமாக நடைபெற உள்ளது.\n\nஇந்த திருவிழாவில் உங்கள் மேலான குடும்பத்தினர் அனைவரும் கலந்துகொண்டு மகானின் திருவருளை பெற்று மகிழ வேண்டுகிறோம்.${s.isPublic?'\n\nஇது ஒரு பொது நிகழ்ச்சியாகும். அனைத்து பக்தர்களையும் வரவேற்கிறோம்.':''}\n\nஅன்புடன்,\n\nமடாதிபதி\n${MUTT}\nகோவிலூர் – 630 108\n`;
+  return `${MUTT}\nகோவிலூர், சிவகங்கை மாவட்டம் – 630 108\n\nதேதி: ${todayTamil()}\n\nமரியாதைக்குரிய\n${to} அவர்களுக்கு,\n${addr}\n\nவணக்கம்.\n\nபொருள்: ${s.name} அவர்களின் குருபூஜை விழா – அழைப்பு\n\nநம் மடாலயத்தில் சமாதியில் வீற்றிருக்கும் மகான் ${s.name} அவர்களின் குருபூஜை விழா வரும் ${ds} அன்று ${s.tamilMonth} மாதம் ${s.star} நட்சத்திர திருநாளில் கோவிலூர் மடாலயத்தில் வைபவமாக நடைபெற உள்ளது.\n\nஇந்த திருவிழாவில் உங்கள் மேலான குடும்பத்தினர் அனைவரும் கலந்துகொண்டு மகானின் திருவருளை பெற்று மகிழ வேண்டுகிறோம்.${s.isPublic?'\n\nஇது ஒரு பொது நிகழ்ச்சியாகும். அனைத்து பக்தர்களையும் வரவேற்கிறோம்.':''}\n\nஅன்புடன்,\n\nமடாதிபதி\n${MUTT}\nகோவிலூர் – 630 108\n`;
 };
 
 const DS = [
-  {id:'1', name:'திருநாவுக்கரசர்', tamilMonth:'சித்திரை', star:'சதயம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-04-14'},
-  {id:'2', name:'கோபாலப்ப ஐயா', tamilMonth:'சித்திரை', star:'உத்திரட்டாதி', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-04-16'},
+  {id:'1', name:'திருநாவுக்கரசர்', tamilMonth:'சித்திரை', star:'சதயம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-05-11'},
+  {id:'2', name:'கோபாலப்ப ஐயா', tamilMonth:'சித்திரை', star:'உத்திரட்டாதி', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-05-13'},
   {id:'3', name:'கோட்டையூர் அழகப்ப ஐயா', tamilMonth:'சித்திரை', star:'பரணி', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-04-18'},
   {id:'4', name:'மகா வேங்கடாசலம் ஐயா', tamilMonth:'சித்திரை', star:'கார்த்திகை', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-04-19'},
   {id:'5', name:'கொப்புடை அம்மன் தேர்', tamilMonth:'வைகாசி', star:'பூசம்', isPublic:true, pax:500, contacts:[], notes:'', date:'2026-05-21'},
@@ -59,25 +64,25 @@ const DS = [
   {id:'26', name:'ஆதீனம் மண்டகப்படி', tamilMonth:'ஆடி', star:'கார்த்திகை', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-08-07'},
   {id:'27', name:'மூர்த்தி நாயனார்', tamilMonth:'ஆடி', star:'கார்த்திகை', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-08-07'},
   {id:'28', name:'ஸ்ரீமத் கருணாநிதி சுவாமிகள் (3வது)', tamilMonth:'ஆடி', star:'ரோகிணி', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-08-08'},
-  {id:'29', name:'தேர்', tamilMonth:'ஆடி', star:'மகம்', isPublic:true, pax:1000, contacts:[], notes:'தேர் திருவிழா', date:'2026-07-17'},
-  {id:'30', name:'நாமட்டம்பட்டி பழனியப்ப ஐயா', tamilMonth:'ஆடி', star:'மகம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-07-17'},
-  {id:'31', name:'ஆடிப்பூரம்', tamilMonth:'ஆடி', star:'பூரம்', isPublic:true, pax:500, contacts:[], notes:'', date:'2026-07-18'},
-  {id:'32', name:'ஸ்ரீமத் துறவு ஆண்டவர் (2வது)', tamilMonth:'ஆடி', star:'பூரம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-07-18'},
-  {id:'33', name:'திருக்கல்யாணம்', tamilMonth:'ஆடி', star:'உத்திரம்', isPublic:true, pax:500, contacts:[], notes:'', date:'2026-07-19'},
-  {id:'34', name:'தெப்பம்', tamilMonth:'ஆடி', star:'ஹஸ்தம்', isPublic:true, pax:500, contacts:[], notes:'', date:'2026-07-20'},
+  {id:'29', name:'தேர்', tamilMonth:'ஆடி', star:'மகம்', isPublic:true, pax:1000, contacts:[], notes:'தேர் திருவிழா', date:'2026-08-13'},
+  {id:'30', name:'நேமத்தான்பட்டி பழனியப்பா ஐயா', tamilMonth:'ஆடி', star:'மகம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-08-13'},
+  {id:'31', name:'ஆடிப்பூரம்', tamilMonth:'ஆடி', star:'பூரம்', isPublic:true, pax:500, contacts:[], notes:'', date:'2026-08-14'},
+  {id:'32', name:'ஸ்ரீமத் துறவு ஆண்டவர் (2வது)', tamilMonth:'ஆடி', star:'பூரம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-08-14'},
+  {id:'33', name:'திருக்கல்யாணம்', tamilMonth:'ஆடி', star:'உத்திரம்', isPublic:true, pax:500, contacts:[], notes:'', date:'2026-08-15'},
+  {id:'34', name:'தெப்பம்', tamilMonth:'ஆடி', star:'ஹஸ்தம்', isPublic:true, pax:500, contacts:[], notes:'', date:'2026-08-16'},
   {id:'35', name:'முத்துப்பல்லக்கு', tamilMonth:'ஆடி', star:'சித்திரை', isPublic:true, pax:500, contacts:[], notes:'', date:'2026-07-21'},
   {id:'36', name:'சுந்தரமூர்த்தி நாயனார்', tamilMonth:'ஆடி', star:'சுவாதி', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-07-22'},
   {id:'37', name:'மதுரை குட்டை சுவாமிகள்', tamilMonth:'ஆவணி', star:'சதயம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-08-28'},
   {id:'38', name:'வேங்கடாசலம் ஐயா', tamilMonth:'ஆவணி', star:'அவிட்டம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-08-27'},
   {id:'39', name:'ஸ்ரீ ல ஸ்ரீ ராமநாத ஞான தேசிகர் (10வது)', tamilMonth:'புரட்டாசி', star:'சுவாதி', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-10-12'},
-  {id:'40', name:'ஸ்ரீ ல ஸ்ரீ நாச்சியப்ப சுவாமிகள் (12வது)', tamilMonth:'புரட்டாசி', star:'மூலம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-09-19'},
+  {id:'40', name:'ஸ்ரீ ல ஸ்ரீ நாச்சியப்ப சுவாமிகள் (12வது)', tamilMonth:'புரட்டாசி', star:'மூலம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-10-16'},
   {id:'41', name:'கண்டனூர் சிதம்பர சுவாமிகள்', tamilMonth:'ஐப்பசி', star:'ரோகிணி', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-10-29'},
   {id:'42', name:'சின்ன அழகப்ப ஐயா', tamilMonth:'ஐப்பசி', star:'மிருகசீரிஷம்', isPublic:false, pax:75, contacts:[], notes:'⚠ kshaya – பஞ்சாங்கம் உறுதிப்படுத்தவும்', date:'2026-10-30'},
   {id:'43', name:'கீழ்ப்பூங்குடி நாராயண சுவாமிகள்', tamilMonth:'ஐப்பசி', star:'மகம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-11-03'},
   {id:'44', name:'சிதம்பர பொன்னம்பல சுவாமிகள்', tamilMonth:'ஐப்பசி', star:'சித்திரை', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-11-07'},
-  {id:'45', name:'சோர்ணாதபுரம் பழனியப்ப ஐயா', tamilMonth:'ஐப்பசி', star:'உத்திராடம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-10-19'},
+  {id:'45', name:'சோர்ணாதபுரம் பழனியப்ப ஐயா', tamilMonth:'ஐப்பசி', star:'உத்திராடம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-11-15'},
   {id:'46', name:'இரவாரம் வள்ளியப்ப ஐயா', tamilMonth:'கார்த்திகை', star:'திருவாதிரை', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-11-27'},
-  {id:'47', name:'காரைக்குடி திருநாவுக்கரசு சுவாமிகள்', tamilMonth:'கார்த்திகை', star:'திருவோணம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-11-16'},
+  {id:'47', name:'காரைக்குடி திருநாவுக்கரசு சுவாமிகள்', tamilMonth:'கார்த்திகை', star:'திருவோணம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-12-13'},
   {id:'48', name:'ஸ்ரீமத் ராமசாமி ஞான தேசிகர் (4வது)', tamilMonth:'மார்கழி', star:'மகம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2026-12-28'},
   {id:'49', name:'இயற்கை நாயனார்', tamilMonth:'மார்கழி', star:'உத்திரம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-12-30'},
   {id:'50', name:'ஈசான்ய ஞான தேசிகர்', tamilMonth:'மார்கழி', star:'மிருகசீரிஷம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2026-12-23'},
@@ -86,7 +91,7 @@ const DS = [
   {id:'53', name:'திருப்புவனம் ஸ்ரீ காசிகானந்த சுவாமிகள்', tamilMonth:'தை', star:'சுவாதி', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-01-29'},
   {id:'54', name:'ஸ்ரீ ல ஸ்ரீ மெய்யப்ப ஞான தேசிகர் (13வது)', tamilMonth:'தை', star:'விசாகம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2027-01-30'},
   {id:'55', name:'சாது பரமானந்த சுவாமிகள்', tamilMonth:'தை', star:'மூலம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-02-02'},
-  {id:'56', name:'களிகம்ப நாயனார்', tamilMonth:'தை', star:'ரேவதி', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-01-15'},
+  {id:'56', name:'கலிக்கம்ப நாயனார்', tamilMonth:'தை', star:'ரேவதி', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-02-11'},
   {id:'57', name:'சாது பட்டமங்கலம் கருப்பையாசாமிகள்', tamilMonth:'தை', star:'ரோகிணி', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-01-19'},
   {id:'58', name:'ஸ்ரீ சோர்ணம் சுவாமிகள்', tamilMonth:'தை', star:'திருவாதிரை', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-01-21'},
   {id:'59', name:'பள்ளத்தூர் முத்துவீரப்ப ஐயா', tamilMonth:'தை', star:'புனர்பூசம்', isPublic:false, pax:75, contacts:[], notes:'⚠ kshaya – பஞ்சாங்கம் உறுதிப்படுத்தவும்', date:'2027-01-22'},
@@ -96,7 +101,7 @@ const DS = [
   {id:'63', name:'காரைக்கால் அம்மையார்', tamilMonth:'பங்குனி', star:'சுவாதி', isPublic:true, pax:500, contacts:[], notes:'', date:'2027-03-25'},
   {id:'64', name:'சண்முகநாதபுரம் முத்தையா சுவாமிகள்', tamilMonth:'பங்குனி', star:'திருவோணம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-04-01'},
   {id:'65', name:'சிவன் செயல் மடம்', tamilMonth:'பங்குனி', star:'உத்திரட்டாதி', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-04-06'},
-  {id:'66', name:'காரைக்குடி அண்ணாமலை ஐயா', tamilMonth:'பங்குனி', star:'மிருகசீரிஷம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-03-15'},
+  {id:'66', name:'காரைக்குடி அண்ணாமலை ஐயா', tamilMonth:'பங்குனி', star:'மிருகசீரிஷம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-04-12'},
   {id:'67', name:'ஸ்ரீமத் சிக்கல் ஆண்டவர்', tamilMonth:'பங்குனி', star:'மகம்', isPublic:false, pax:100, contacts:[], notes:'', date:'2027-03-20'},
   {id:'68', name:'கோவிலூர் ஸ்ரீ ல ஸ்ரீ முத்துராமலிங்க ஆண்டவர்', tamilMonth:'பங்குனி', star:'உத்திரம்', isPublic:true, pax:1000, contacts:[], notes:'வருடாந்திர மகா குருபூஜை', date:'2027-03-22'},
   {id:'69', name:'மானாமதுரை நாராயண சுவாமிகள்', tamilMonth:'பங்குனி', star:'ஹஸ்தம்', isPublic:false, pax:75, contacts:[], notes:'', date:'2027-03-23'},
@@ -214,14 +219,14 @@ export default function App() {
 
   useEffect(() => {
     try {
-      // v4: corrected nakshatra dates for Parabava 2026-27
-      const stored = localStorage.getItem('gp_saints_v4');
+      // v5: second-occurrence rule applied for all double-nakshatra months
+      const stored = localStorage.getItem('gp_saints_v5');
       if (stored) { setSaints(JSON.parse(stored)); }
       else {
-        // migrate from v3: preserve contacts/pax entered by admin
-        const old3 = localStorage.getItem('gp_saints_v3');
-        if (old3) {
-          const old = JSON.parse(old3);
+        // migrate from v4: preserve contacts/pax/kitchenNotes; dates come from corrected DS
+        const old4 = localStorage.getItem('gp_saints_v4');
+        if (old4) {
+          const old = JSON.parse(old4);
           const merged = DS.map(s => {
             const prev = old.find(o => o.id === s.id);
             return prev ? { ...s, contacts: prev.contacts||[], pax: prev.pax||s.pax,
@@ -233,7 +238,7 @@ export default function App() {
     } catch { setSaints(DS); }
     setLoaded(true);
   }, []);
-  useEffect(() => { if (loaded) { try { localStorage.setItem('gp_saints_v4', JSON.stringify(saints)); } catch {} } }, [saints, loaded]);
+  useEffect(() => { if (loaded) { try { localStorage.setItem('gp_saints_v5', JSON.stringify(saints)); } catch {} } }, [saints, loaded]);
 
   const toast$ = (msg, type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),4500); };
   const upd = (id, ch) => setSaints(p => p.map(s => s.id===id ? {...s,...ch} : s));
@@ -371,7 +376,7 @@ export default function App() {
             <div style={{fontSize:'.8rem',color:'#6b7280'}}>{totalDated}/{saints.length}</div>
           </div>
           <div style={{background:'#fef3c7',border:'1px solid #fcd34d',borderRadius:'.5rem',padding:'.7rem .9rem',fontSize:'.8rem',color:'#92400e'}}>
-            💡 நட்சத்திரம் அன்றே குருபூஜை. இரண்டு நாள் வந்தால் காலை 11 மணி வரை உள்ள நாளை எடுக்கவும். ⚠ kshaya = நட்சத்திரம் இல்லாத நாள் – பஞ்சாங்கம் உறுதிப்படுத்தவும்.
+            💡 நட்சத்திரம் அன்றே குருபூஜை. ஒரு மாதத்தில் இரு முறை வந்தால் இரண்டாவது நாளை எடுக்கவும். தொடர் நாட்களில் வந்தால் பகல் நேரத்தில் உள்ள நாளை எடுக்கவும். ⚠ kshaya = நட்சத்திரம் இல்லாத நாள் – பஞ்சாங்கம் உறுதிப்படுத்தவும்.
           </div>
           <div style={{display:'flex',gap:'.35rem',flexWrap:'wrap'}}>
             {['', ...TAMIL_MONTHS].map(m=>(
