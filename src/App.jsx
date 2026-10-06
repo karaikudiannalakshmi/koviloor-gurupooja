@@ -9,14 +9,21 @@ const STARS = ['அஸ்வினி','பரணி','கார்த்தி�
 const WEEKDAYS_TM = ['ஞாயிறு','திங்கள்','செவ்வாய்','புதன்','வியாழன்','வெள்ளி','சனி'];
 
 const MONTHS_LONG = ['ஜனவரி','பிப்ரவரி','மார்ச்','ஏப்ரல்','மே','ஜூன்','ஜூலை','ஆகஸ்ட்','செப்டம்பர்','அக்டோபர்','நவம்பர்','டிசம்பர்'];
+const ENGLISH_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const TAMIL_MONTH_STARTS = {
+  'சித்திரை':'2026-04-14','வைகாசி':'2026-05-15','ஆனி':'2026-06-15',
+  'ஆடி':'2026-07-17','ஆவணி':'2026-08-17','புரட்டாசி':'2026-09-17',
+  'ஐப்பசி':'2026-10-18','கார்த்திகை':'2026-11-17','மார்கழி':'2026-12-16',
+  'தை':'2027-01-14','மாசி':'2027-02-13','பங்குனி':'2027-03-15',
+};
+const getTamilDay = (date, month) => {
+  const s = TAMIL_MONTH_STARTS[month]; if (!s||!date) return '?';
+  return Math.round((new Date(date+'T00:00:00')-new Date(s+'T00:00:00'))/86400000)+1;
+};
 const fmtDate = (d) => {
   if (!d) return '—';
   const dt = new Date(d + 'T00:00:00');
   return `${dt.getDate().toString().padStart(2,'0')}.${(dt.getMonth()+1).toString().padStart(2,'0')}.${dt.getFullYear()} (${WEEKDAYS_TM[dt.getDay()]})`;
-};
-const todayTamil = () => {
-  const d = new Date();
-  return `${d.getDate()} ${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`;
 };
 const daysUntil = (ds) => {
   if (!ds) return null;
@@ -29,10 +36,11 @@ const alertDue = (ds) => {
   return d.toISOString().split('T')[0];
 };
 const generateLetter = (s) => {
-  const ds = s.date ? fmtDate(s.date) : '[தேதி நிர்ணயிக்கப்படவில்லை]';
-  const to = s.contacts?.length>0 ? s.contacts[0].name : '[குடும்பத்தினர் பெயர்]';
-  const addr = s.contacts?.length>0 && s.contacts[0].address ? s.contacts[0].address : '[முகவரி]';
-  return `${MUTT}\nகோவிலூர், சிவகங்கை மாவட்டம் – 630 108\n\nதேதி: ${todayTamil()}\n\nமரியாதைக்குரிய\n${to} அவர்களுக்கு,\n${addr}\n\nவணக்கம்.\n\nபொருள்: ${s.name} அவர்களின் குருபூஜை விழா – அழைப்பு\n\nநம் மடாலயத்தில் சமாதியில் வீற்றிருக்கும் மகான் ${s.name} அவர்களின் குருபூஜை விழா வரும் ${ds} அன்று ${s.tamilMonth} மாதம் ${s.star} நட்சத்திர திருநாளில் கோவிலூர் மடாலயத்தில் வைபவமாக நடைபெற உள்ளது.\n\nஇந்த திருவிழாவில் உங்கள் மேலான குடும்பத்தினர் அனைவரும் கலந்துகொண்டு மகானின் திருவருளை பெற்று மகிழ வேண்டுகிறோம்.${s.isPublic?'\n\nஇது ஒரு பொது நிகழ்ச்சியாகும். அனைத்து பக்தர்களையும் வரவேற்கிறோம்.':''}\n\nஅன்புடன்,\n\nமடாதிபதி\n${MUTT}\nகோவிலூர் – 630 108\n`;
+  if (!s.date) return '[தேதி நிர்ணயிக்கப்படவில்லை]';
+  const dt = new Date(s.date+'T00:00:00');
+  const tDay = getTamilDay(s.date, s.tamilMonth);
+  const engDate = `${dt.getDate()} ${ENGLISH_MONTHS[dt.getMonth()]} ${dt.getFullYear()}`;
+  return `உ.\nசிவமயம்\nகோவிலூர் மடத்திலிருந்து எழுதிய திருமுகம்\nநிகழும் பராபவ ஆண்டு ${s.tamilMonth} மாதம் ${tDay} ம் நாள்\n( ${engDate} — ${WEEKDAYS_TM[dt.getDay()]} )\n${s.star} நட்சத்திரத்தில்\nஸ்ரீல ஸ்ரீ ${s.name} அவர்களுக்கு\nகுருபூஜை நடைபெற இருப்பதால் தாங்கள் குடும்பத்துடன் வந்து தரிசித்துப்\nபேரானந்த பெருவாழ்வைப் பெற வேண்டியது.\n\nஸ்ரீ சற்குருநாதன் துணை`;
 };
 
 const DS = [
