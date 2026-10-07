@@ -224,34 +224,40 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [filterMonth, setFilterMonth] = useState('');
   const [search, setSearch] = useState('');
+  const [editingNameId, setEditingNameId] = useState(null);
+  const [draftName, setDraftName] = useState('');
 
   useEffect(() => {
     try {
-      // v5: second-occurrence rule applied for all double-nakshatra months
-      const stored = localStorage.getItem('gp_saints_v5');
-      if (stored) { setSaints(JSON.parse(stored)); }
+      // v6: corrected name spellings propagate from DS; migrate preserving all user data
+      const migrateFrom = (old) => DS.map(s => {
+        const prev = old.find(o => o.id === s.id);
+        return prev ? { ...s, contacts: prev.contacts||[], pax: prev.pax||s.pax,
+          kitchenNotes: prev.kitchenNotes||'', alertSent: prev.alertSent||false, calAdded: prev.calAdded||false } : s;
+      });
+      const v6 = localStorage.getItem('gp_saints_v6');
+      if (v6) { setSaints(JSON.parse(v6)); }
       else {
-        // migrate from v4: preserve contacts/pax/kitchenNotes; dates come from corrected DS
-        const old4 = localStorage.getItem('gp_saints_v4');
-        if (old4) {
-          const old = JSON.parse(old4);
-          const merged = DS.map(s => {
-            const prev = old.find(o => o.id === s.id);
-            return prev ? { ...s, contacts: prev.contacts||[], pax: prev.pax||s.pax,
-              kitchenNotes: prev.kitchenNotes||'', alertSent: prev.alertSent||false, calAdded: prev.calAdded||false } : s;
-          });
-          setSaints(merged);
-        } else { setSaints(DS); }
+        const v5 = localStorage.getItem('gp_saints_v5');
+        if (v5) { setSaints(migrateFrom(JSON.parse(v5))); }
+        else {
+          const v4 = localStorage.getItem('gp_saints_v4');
+          if (v4) { setSaints(migrateFrom(JSON.parse(v4))); }
+          else { setSaints(DS); }
+        }
       }
     } catch { setSaints(DS); }
     setLoaded(true);
   }, []);
-  useEffect(() => { if (loaded) { try { localStorage.setItem('gp_saints_v5', JSON.stringify(saints)); } catch {} } }, [saints, loaded]);
+  useEffect(() => { if (loaded) { try { localStorage.setItem('gp_saints_v6', JSON.stringify(saints)); } catch {} } }, [saints, loaded]);
 
   const toast$ = (msg, type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),4500); };
   const upd = (id, ch) => setSaints(p => p.map(s => s.id===id ? {...s,...ch} : s));
   const addS = (data) => setSaints(p => [...p, {...data, id:Date.now().toString(), alertSent:false, calAdded:false}]);
   const delS = (id) => { if (window.confirm('நீக்கவா?')) setSaints(p=>p.filter(s=>s.id!==id)); };
+  const startNameEdit = (s) => { setEditingNameId(s.id); setDraftName(s.name); };
+  const saveNameEdit = (id) => { upd(id, {name: draftName.trim()||draftName}); setEditingNameId(null); toast$('பெயர் சேமிக்கப்பட்டது ✓'); };
+  const cancelNameEdit = () => setEditingNameId(null);
 
   const today = new Date().toISOString().split('T')[0];
   const upcoming = saints.filter(s=>s.date).map(s=>({...s, dl:daysUntil(s.date)})).filter(s=>s.dl!==null&&s.dl>=0&&s.dl<=60).sort((a,b)=>a.dl-b.dl);
@@ -406,12 +412,21 @@ export default function App() {
                     <tr key={s.id} style={{background:i%2===0?'#fff':'#fff7ed',borderBottom:'1px solid #fed7aa'}}>
                       <td style={{padding:'.55rem .5rem',color:'#9ca3af',fontSize:'.75rem'}}>{s.id}</td>
                       <td style={{padding:'.55rem .75rem'}}>
-                        <input
-                          type="text" value={s.name}
-                          onChange={e=>upd(s.id,{name:e.target.value})}
-                          onFocus={e=>e.target.style.borderBottomColor='#c05621'}
-                          onBlur={e=>e.target.style.borderBottomColor='transparent'}
-                          style={{fontWeight:600,color:'#1f2937',background:'transparent',border:'none',borderBottom:'1px dashed transparent',outline:'none',width:'100%',fontSize:'.82rem',padding:0,fontFamily:'inherit',transition:'border-color .15s'}} />
+                        {editingNameId===s.id ? (
+                          <div style={{display:'flex',alignItems:'center',gap:'.3rem'}}>
+                            <input autoFocus type="text" value={draftName}
+                              onChange={e=>setDraftName(e.target.value)}
+                              onKeyDown={e=>{if(e.key==='Enter')saveNameEdit(s.id);if(e.key==='Escape')cancelNameEdit();}}
+                              style={{fontWeight:600,color:'#1f2937',background:'#fff7ed',border:'1px solid #c05621',borderRadius:'.25rem',outline:'none',flex:1,fontSize:'.82rem',padding:'.15rem .35rem',fontFamily:'inherit'}} />
+                            <button onClick={()=>saveNameEdit(s.id)} style={{background:'#16a34a',color:'#fff',border:'none',borderRadius:'.25rem',padding:'.15rem .4rem',cursor:'pointer',fontSize:'.78rem'}}>✓</button>
+                            <button onClick={cancelNameEdit} style={{background:'#9ca3af',color:'#fff',border:'none',borderRadius:'.25rem',padding:'.15rem .4rem',cursor:'pointer',fontSize:'.78rem'}}>✗</button>
+                          </div>
+                        ) : (
+                          <div style={{display:'flex',alignItems:'center',gap:'.35rem'}}>
+                            <span style={{fontWeight:600,color:'#1f2937',fontSize:'.82rem'}}>{s.name}</span>
+                            <button onClick={()=>startNameEdit(s)} title="பெயர் திருத்து" style={{background:'none',border:'none',cursor:'pointer',color:'#d1d5db',padding:0,fontSize:'.75rem',lineHeight:1}}>✏</button>
+                          </div>
+                        )}
                         {s.notes&&<div style={{fontSize:'.72rem',color:s.notes.includes('⚠')?'#d97706':'#9ca3af'}}>{s.notes}</div>}
                       </td>
                       <td style={{padding:'.55rem .75rem',color:'#6b7280',whiteSpace:'nowrap'}}>{s.tamilMonth}</td>
@@ -455,12 +470,21 @@ export default function App() {
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'1rem'}}>
                   <div style={{flex:1}}>
                     <div style={{display:'flex',gap:'.35rem',flexWrap:'wrap',alignItems:'center',marginBottom:'.3rem'}}>
-                      <input
-                        type="text" value={s.name}
-                        onChange={e=>upd(s.id,{name:e.target.value})}
-                        onFocus={e=>e.target.style.borderBottomColor='#c05621'}
-                        onBlur={e=>e.target.style.borderBottomColor='transparent'}
-                        style={{fontWeight:700,color:'#1f2937',background:'transparent',border:'none',borderBottom:'1px dashed transparent',outline:'none',fontSize:'inherit',padding:0,fontFamily:'inherit',transition:'border-color .15s'}} />
+                      {editingNameId===s.id ? (
+                        <>
+                          <input autoFocus type="text" value={draftName}
+                            onChange={e=>setDraftName(e.target.value)}
+                            onKeyDown={e=>{if(e.key==='Enter')saveNameEdit(s.id);if(e.key==='Escape')cancelNameEdit();}}
+                            style={{fontWeight:700,color:'#1f2937',background:'#fff7ed',border:'1px solid #c05621',borderRadius:'.25rem',outline:'none',fontSize:'.9rem',padding:'.2rem .4rem',fontFamily:'inherit',flex:1,minWidth:'10rem'}} />
+                          <button onClick={()=>saveNameEdit(s.id)} style={{background:'#16a34a',color:'#fff',border:'none',borderRadius:'.25rem',padding:'.2rem .55rem',cursor:'pointer',fontSize:'.8rem'}}>✓ சேமி</button>
+                          <button onClick={cancelNameEdit} style={{background:'#9ca3af',color:'#fff',border:'none',borderRadius:'.25rem',padding:'.2rem .4rem',cursor:'pointer',fontSize:'.8rem'}}>✗</button>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{fontWeight:700,color:'#1f2937'}}>{s.name}</span>
+                          <button onClick={()=>startNameEdit(s)} title="பெயர் திருத்து" style={{background:'none',border:'none',cursor:'pointer',color:'#d1d5db',padding:0,fontSize:'.8rem'}}>✏</button>
+                        </>
+                      )}
                       {s.isPublic&&<span style={pill('#ede9fe','#7c3aed')}>பொது</span>}
                       {s.alertSent&&<span style={pill('#dcfce7','#16a34a')}>✉</span>}
                       {s.calAdded&&<span style={pill('#dbeafe','#1d4ed8')}>📅</span>}
